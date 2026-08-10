@@ -67,8 +67,8 @@ def add_expense_db(user_id, amount, category, date, description):
     return expense_id
 
 
-def get_user_expenses(user_id, month=None, category=None, search=None):
-    """Fetches expenses for a user with optional month, category, and keyword filters."""
+def get_user_expenses(user_id, month=None, category=None, search=None, start_date=None, end_date=None):
+    """Fetches expenses for a user with optional month, category, keyword, and date range filters."""
     conn = get_db()
     cursor = conn.cursor()
     
@@ -88,6 +88,14 @@ def get_user_expenses(user_id, month=None, category=None, search=None):
         params.append(f"%{search}%")
         params.append(f"%{search}%")
         
+    if start_date:
+        query += " AND date >= ?"
+        params.append(start_date)
+
+    if end_date:
+        query += " AND date <= ?"
+        params.append(end_date)
+        
     query += " ORDER BY date DESC, id DESC"
     
     cursor.execute(query, params)
@@ -96,8 +104,8 @@ def get_user_expenses(user_id, month=None, category=None, search=None):
     return expenses
 
 
-def get_expense_summary(user_id, month=None):
-    """Calculates summary metrics (total spending, count, top category) with optional month filter."""
+def get_expense_summary(user_id, month=None, start_date=None, end_date=None):
+    """Calculates summary metrics (total spending, count, top category) with optional date range filter."""
     conn = get_db()
     cursor = conn.cursor()
     
@@ -107,6 +115,14 @@ def get_expense_summary(user_id, month=None):
     if month and month != "All":
         query_total += " AND strftime('%Y-%m', date) = ?"
         params.append(month)
+
+    if start_date:
+        query_total += " AND date >= ?"
+        params.append(start_date)
+
+    if end_date:
+        query_total += " AND date <= ?"
+        params.append(end_date)
         
     cursor.execute(query_total, params)
     row = cursor.fetchone()
@@ -122,6 +138,14 @@ def get_expense_summary(user_id, month=None):
     if month and month != "All":
         query_top += " AND strftime('%Y-%m', date) = ?"
         params_top.append(month)
+
+    if start_date:
+        query_top += " AND date >= ?"
+        params_top.append(start_date)
+
+    if end_date:
+        query_top += " AND date <= ?"
+        params_top.append(end_date)
         
     query_top += " GROUP BY category ORDER BY cat_total DESC LIMIT 1"
 
@@ -137,8 +161,8 @@ def get_expense_summary(user_id, month=None):
     }
 
 
-def get_category_totals(user_id, month=None):
-    """Calculates category breakdown with totals and percentages with optional month filter."""
+def get_category_totals(user_id, month=None, start_date=None, end_date=None):
+    """Calculates category breakdown with totals and percentages with optional date range filter."""
     conn = get_db()
     cursor = conn.cursor()
     
@@ -148,6 +172,14 @@ def get_category_totals(user_id, month=None):
     if month and month != "All":
         query_grand += " AND strftime('%Y-%m', date) = ?"
         params.append(month)
+
+    if start_date:
+        query_grand += " AND date >= ?"
+        params.append(start_date)
+
+    if end_date:
+        query_grand += " AND date <= ?"
+        params.append(end_date)
         
     cursor.execute(query_grand, params)
     grand_total = cursor.fetchone()["total"] or 0.0
@@ -161,6 +193,14 @@ def get_category_totals(user_id, month=None):
     if month and month != "All":
         query_cats += " AND strftime('%Y-%m', date) = ?"
         params_cats.append(month)
+
+    if start_date:
+        query_cats += " AND date >= ?"
+        params_cats.append(start_date)
+
+    if end_date:
+        query_cats += " AND date <= ?"
+        params_cats.append(end_date)
         
     query_cats += " GROUP BY category ORDER BY total DESC"
 
@@ -361,6 +401,108 @@ def get_monthly_analytics_summary(user_id, month=None):
         "top_cat_amount": top_cat_amount,
         "spider_nodes": spider_nodes,
         "advisory_tip": advisory_tip
+    }
+
+
+def get_inter_category_stats(user_id):
+    """Calculates cross-category spending matrix across months and inter-category growth trends."""
+    conn = get_db()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        SELECT DISTINCT strftime('%Y-%m', date) AS month_str
+        FROM expenses WHERE user_id = ?
+        ORDER BY month_str ASC
+    """, (user_id,))
+    month_rows = cursor.fetchall()
+    
+    month_names = {
+        "01": "Jan", "02": "Feb", "03": "Mar", "04": "Apr",
+        "05": "May", "06": "Jun", "07": "Jul", "08": "Aug",
+        "09": "Sep", "10": "Oct", "11": "Nov", "12": "Dec"
+    }
+
+    months = []
+    for r in month_rows:
+        m_str = r["month_str"]
+        if m_str and len(m_str.split("-")) == 2:
+            yr, mo = m_str.split("-")
+            months.append({
+                "key": m_str,
+                "label": f"{month_names.get(mo, mo)} '{yr[2:]}"
+            })
+
+    all_categories = ["Food", "Bills", "Transport", "Health", "Shopping", "Entertainment", "Other"]
+
+    cursor.execute("""
+        SELECT category, strftime('%Y-%m', date) AS month_str, SUM(amount) AS total
+        FROM expenses WHERE user_id = ?
+        GROUP BY category, month_str
+    """, (user_id,))
+    grid_rows = cursor.fetchall()
+    conn.close()
+
+    grid_map = {}
+    for r in grid_rows:
+        grid_map[(r["category"], r["month_str"])] = r["total"]
+
+    matrix_rows = []
+    category_totals = {}
+    category_averages = {}
+
+    for cat in all_categories:
+        m_vals = []
+        cat_grand_total = 0.0
+        max_m_val = 0.0
+        max_m_label = "N/A"
+
+        for m in months:
+            val = grid_map.get((cat, m["key"]), 0.0)
+            m_vals.append({
+                "month_key": m["key"],
+                "amount": val
+            })
+            cat_grand_total += val
+            if val > max_m_val:
+                max_m_val = val
+                max_m_label = m["label"]
+
+        avg_val = round(cat_grand_total / len(months), 2) if months else 0.0
+        category_totals[cat] = cat_grand_total
+        category_averages[cat] = avg_val
+
+        matrix_rows.append({
+            "category": cat,
+            "monthly_values": m_vals,
+            "total": cat_grand_total,
+            "avg": avg_val,
+            "max_month": max_m_label,
+            "max_amount": max_m_val
+        })
+
+    highest_avg_cat = max(category_averages, key=category_averages.get) if category_averages else "None"
+    
+    growth_cat = "None"
+    max_growth_pct = -999.0
+    if len(months) >= 2:
+        first_m = months[0]["key"]
+        last_m = months[-1]["key"]
+        for cat in all_categories:
+            val_start = grid_map.get((cat, first_m), 0.0)
+            val_end = grid_map.get((cat, last_m), 0.0)
+            if val_start > 0:
+                pct = ((val_end - val_start) / val_start) * 100
+                if pct > max_growth_pct:
+                    max_growth_pct = pct
+                    growth_cat = cat
+
+    return {
+        "months_header": months,
+        "matrix_rows": matrix_rows,
+        "highest_avg_cat": highest_avg_cat,
+        "highest_avg_amount": category_averages.get(highest_avg_cat, 0.0),
+        "growth_cat": growth_cat,
+        "growth_pct": round(max_growth_pct, 1) if max_growth_pct != -999.0 else 0.0
     }
 
 
