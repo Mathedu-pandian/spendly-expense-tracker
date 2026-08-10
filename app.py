@@ -2,7 +2,10 @@ import os
 from functools import wraps
 from flask import Flask, render_template, request, redirect, url_for, session, g, flash
 from werkzeug.security import check_password_hash
-from database.db import init_db, seed_db, create_user, get_user_by_email, get_user_by_id
+from database.db import (
+    init_db, seed_db, create_user, get_user_by_email, get_user_by_id,
+    get_user_expenses, get_expense_summary, get_category_totals
+)
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", "spendly-secret-key-dev-mode-2026")
@@ -45,7 +48,7 @@ def landing():
 @app.route("/register", methods=["GET", "POST"])
 def register():
     if g.user:
-        return redirect(url_for("profile"))
+        return redirect(url_for("dashboard"))
 
     if request.method == "POST":
         name = request.form.get("name", "").strip()
@@ -65,7 +68,7 @@ def register():
         # Log in newly registered user
         session.clear()
         session["user_id"] = user_id
-        return redirect(url_for("profile"))
+        return redirect(url_for("dashboard"))
 
     return render_template("register.html")
 
@@ -73,7 +76,7 @@ def register():
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if g.user:
-        return redirect(url_for("profile"))
+        return redirect(url_for("dashboard"))
 
     if request.method == "POST":
         email = request.form.get("email", "").strip()
@@ -93,7 +96,7 @@ def login():
         next_page = request.args.get("next")
         if next_page and next_page.startswith("/"):
             return redirect(next_page)
-        return redirect(url_for("profile"))
+        return redirect(url_for("dashboard"))
 
     return render_template("login.html")
 
@@ -117,6 +120,26 @@ def privacy():
 # ------------------------------------------------------------------ #
 # Protected Routes                                                    #
 # ------------------------------------------------------------------ #
+
+@app.route("/dashboard")
+@login_required
+def dashboard():
+    category_filter = request.args.get("category", "All")
+    search_query = request.args.get("search", "").strip()
+
+    expenses = get_user_expenses(g.user["id"], category=category_filter, search=search_query)
+    summary = get_expense_summary(g.user["id"])
+    category_totals = get_category_totals(g.user["id"])
+
+    return render_template(
+        "dashboard.html",
+        expenses=expenses,
+        summary=summary,
+        category_totals=category_totals,
+        selected_category=category_filter,
+        selected_search=search_query
+    )
+
 
 @app.route("/profile")
 @login_required

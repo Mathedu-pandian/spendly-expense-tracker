@@ -31,7 +31,8 @@
                 </div>
             </div>
 
-            <div class="profile-actions">
+            <div class="profile-actions" style="display: flex; flex-direction: column; gap: 0.75rem;">
+                <a href="{{ url_for('dashboard') }}" class="btn-primary" style="width: 100%; text-align: center;">Go to Expense Dashboard →</a>
                 <a href="{{ url_for('logout') }}" class="btn-ghost" style="width: 100%; text-align: center; color: var(--danger); border-color: #f5c6c2;">Sign out</a>
             </div>
         </div>

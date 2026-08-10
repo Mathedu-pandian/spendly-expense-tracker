@@ -53,6 +53,88 @@ def get_user_by_id(user_id):
     return user
 
 
+def get_user_expenses(user_id, category=None, search=None):
+    """Fetches all expenses for a user with optional category filter and keyword search."""
+    conn = get_db()
+    cursor = conn.cursor()
+    
+    query = "SELECT * FROM expenses WHERE user_id = ?"
+    params = [user_id]
+    
+    if category and category != "All":
+        query += " AND category = ?"
+        params.append(category)
+        
+    if search:
+        query += " AND (description LIKE ? OR category LIKE ?)"
+        params.append(f"%{search}%")
+        params.append(f"%{search}%")
+        
+    query += " ORDER BY date DESC, id DESC"
+    
+    cursor.execute(query, params)
+    expenses = cursor.fetchall()
+    conn.close()
+    return expenses
+
+
+def get_expense_summary(user_id):
+    """Calculates overall metrics (total spending, count, top category)."""
+    conn = get_db()
+    cursor = conn.cursor()
+    
+    cursor.execute("SELECT SUM(amount) AS total, COUNT(*) AS count FROM expenses WHERE user_id = ?", (user_id,))
+    row = cursor.fetchone()
+    total_spent = row["total"] or 0.0
+    total_count = row["count"] or 0
+
+    cursor.execute("""
+        SELECT category, SUM(amount) AS cat_total 
+        FROM expenses WHERE user_id = ? 
+        GROUP BY category 
+        ORDER BY cat_total DESC 
+        LIMIT 1
+    """, (user_id,))
+    top_row = cursor.fetchone()
+    top_category = top_row["category"] if top_row else "None"
+
+    conn.close()
+    return {
+        "total_spent": total_spent,
+        "total_count": total_count,
+        "top_category": top_category
+    }
+
+
+def get_category_totals(user_id):
+    """Calculates category breakdown with totals and percentage values."""
+    conn = get_db()
+    cursor = conn.cursor()
+    
+    cursor.execute("SELECT SUM(amount) AS total FROM expenses WHERE user_id = ?", (user_id,))
+    grand_total = cursor.fetchone()["total"] or 0.0
+
+    cursor.execute("""
+        SELECT category, SUM(amount) AS total, COUNT(*) AS count 
+        FROM expenses WHERE user_id = ? 
+        GROUP BY category 
+        ORDER BY total DESC
+    """, (user_id,))
+    rows = cursor.fetchall()
+    conn.close()
+
+    breakdown = []
+    for r in rows:
+        pct = (r["total"] / grand_total * 100) if grand_total > 0 else 0
+        breakdown.append({
+            "category": r["category"],
+            "total": r["total"],
+            "count": r["count"],
+            "percentage": round(pct, 1)
+        })
+    return breakdown
+
+
 def init_db():
     """Creates database tables if they do not already exist."""
     conn = get_db()

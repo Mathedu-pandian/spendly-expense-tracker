@@ -1,0 +1,135 @@
+{% extends "base.html" %}
+
+{% block title %}Expense Dashboard — Spendly{% endblock %}
+
+{% block content %}
+<section class="dashboard-section">
+    <div class="dashboard-container">
+        
+        <!-- Header & Top Actions -->
+        <div class="dashboard-header">
+            <div>
+                <h1 class="dashboard-title">Welcome back, {{ g.user.name.split()[0] }}</h1>
+                <p class="dashboard-subtitle">Here is your personal financial overview</p>
+            </div>
+            <div class="dashboard-top-actions">
+                <a href="{{ url_for('profile') }}" class="btn-ghost">View Profile</a>
+                <a href="{{ url_for('add_expense') }}" class="btn-primary">+ Add Expense</a>
+            </div>
+        </div>
+
+        <!-- Metric Summary Cards Grid -->
+        <div class="metrics-grid">
+            <div class="metric-card">
+                <span class="metric-icon">💳</span>
+                <div class="metric-info">
+                    <span class="metric-label">Total Spent</span>
+                    <span class="metric-value">₹{{ "%.2f"|format(summary.total_spent) }}</span>
+                </div>
+            </div>
+
+            <div class="metric-card">
+                <span class="metric-icon">📝</span>
+                <div class="metric-info">
+                    <span class="metric-label">Total Transactions</span>
+                    <span class="metric-value">{{ summary.total_count }}</span>
+                </div>
+            </div>
+
+            <div class="metric-card">
+                <span class="metric-icon">🏷️</span>
+                <div class="metric-info">
+                    <span class="metric-label">Top Category</span>
+                    <span class="metric-value">{{ summary.top_category }}</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Category Breakdown Visualization -->
+        {% if category_totals %}
+        <div class="dashboard-card category-card">
+            <h2 class="card-title">Category Spending Breakdown</h2>
+            <div class="category-bars-list">
+                {% for cat in category_totals %}
+                <div class="category-bar-item">
+                    <div class="category-bar-head">
+                        <span class="cat-name-badge cat-{{ cat.category.lower() }}">{{ cat.category }}</span>
+                        <span class="cat-total-val">₹{{ "%.2f"|format(cat.total) }} ({{ cat.percentage }}%)</span>
+                    </div>
+                    <div class="cat-bar-track">
+                        <div class="cat-bar-fill cat-fill-{{ cat.category.lower() }}" style="width: {{ cat.percentage }}%;"></div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Expense Records List & Filters -->
+        <div class="dashboard-card records-card">
+            <div class="records-header">
+                <h2 class="card-title">Recent Expenses</h2>
+                
+                <form method="GET" action="{{ url_for('dashboard') }}" class="filter-form">
+                    <div class="filter-group">
+                        <input type="text" name="search" value="{{ selected_search }}" placeholder="Search description..." class="form-input filter-input">
+                        <select name="category" class="form-input filter-select" onchange="this.form.submit()">
+                            <option value="All" {% if selected_category == 'All' %}selected{% endif %}>All Categories</option>
+                            <option value="Food" {% if selected_category == 'Food' %}selected{% endif %}>Food</option>
+                            <option value="Bills" {% if selected_category == 'Bills' %}selected{% endif %}>Bills</option>
+                            <option value="Transport" {% if selected_category == 'Transport' %}selected{% endif %}>Transport</option>
+                            <option value="Health" {% if selected_category == 'Health' %}selected{% endif %}>Health</option>
+                            <option value="Shopping" {% if selected_category == 'Shopping' %}selected{% endif %}>Shopping</option>
+                            <option value="Entertainment" {% if selected_category == 'Entertainment' %}selected{% endif %}>Entertainment</option>
+                            <option value="Other" {% if selected_category == 'Other' %}selected{% endif %}>Other</option>
+                        </select>
+                        <button type="submit" class="btn-ghost filter-btn">Search</button>
+                        {% if selected_category != 'All' or selected_search %}
+                        <a href="{{ url_for('dashboard') }}" class="btn-ghost clear-filter-btn">Reset</a>
+                        {% endif %}
+                    </div>
+                </form>
+            </div>
+
+            {% if expenses %}
+            <div class="table-responsive">
+                <table class="expenses-table">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Category</th>
+                            <th>Description</th>
+                            <th style="text-align: right;">Amount</th>
+                            <th style="text-align: center;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for expense in expenses %}
+                        <tr>
+                            <td class="expense-date">{{ expense.date }}</td>
+                            <td>
+                                <span class="cat-pill cat-pill-{{ expense.category.lower() }}">{{ expense.category }}</span>
+                            </td>
+                            <td class="expense-desc">{{ expense.description or '—' }}</td>
+                            <td class="expense-amount">₹{{ "%.2f"|format(expense.amount) }}</td>
+                            <td class="expense-actions">
+                                <a href="{{ url_for('edit_expense', id=expense.id) }}" class="action-btn edit-btn" title="Edit">✏️ Edit</a>
+                                <a href="{{ url_for('delete_expense', id=expense.id) }}" class="action-btn delete-btn" title="Delete" onclick="return confirm('Are you sure you want to delete this expense?')">🗑️ Delete</a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="empty-state">
+                <span class="empty-icon">📊</span>
+                <p class="empty-text">No expenses found matching your criteria.</p>
+                <a href="{{ url_for('add_expense') }}" class="btn-primary">+ Add Your First Expense</a>
+            </div>
+            {% endif %}
+        </div>
+
+    </div>
+</section>
+{% endblock %}

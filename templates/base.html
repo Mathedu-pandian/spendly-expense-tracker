@@ -20,6 +20,7 @@
             </a>
             <div class="nav-links">
                 {% if g.user %}
+                    <a href="{{ url_for('dashboard') }}" class="nav-item">Dashboard</a>
                     <a href="{{ url_for('profile') }}" class="nav-user">
                         <span class="user-avatar">{{ g.user.name[0] | upper }}</span>
                         <span class="user-name">{{ g.user.name }}</span>
