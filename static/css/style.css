@@ -1212,6 +1212,283 @@ a { color: inherit; text-decoration: none; }
 }
 
 /* ------------------------------------------------------------------ */
+/* Expense Dashboard Page                                              */
+/* ------------------------------------------------------------------ */
+
+.dashboard-section {
+    padding: 3rem 2rem 5rem;
+    max-width: var(--max-width);
+    margin: 0 auto;
+}
+
+.dashboard-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-bottom: 2rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid var(--border);
+}
+
+.dashboard-title {
+    font-family: var(--font-display);
+    font-size: 2.25rem;
+    color: var(--ink);
+    margin-bottom: 0.25rem;
+}
+
+.dashboard-subtitle {
+    font-size: 0.95rem;
+    color: var(--ink-muted);
+}
+
+.dashboard-top-actions {
+    display: flex;
+    gap: 0.75rem;
+    align-items: center;
+}
+
+/* Metric Cards Grid */
+
+.metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.metric-card {
+    background: var(--paper-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.02);
+}
+
+.metric-icon {
+    font-size: 2rem;
+    width: 52px;
+    height: 52px;
+    background: var(--paper-warm);
+    border-radius: var(--radius-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.metric-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.metric-label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--ink-muted);
+}
+
+.metric-value {
+    font-family: var(--font-display);
+    font-size: 1.65rem;
+    color: var(--ink);
+    margin-top: 0.1rem;
+}
+
+/* Dashboard Cards */
+
+.dashboard-card {
+    background: var(--paper-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 2rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.02);
+}
+
+.card-title {
+    font-family: var(--font-display);
+    font-size: 1.35rem;
+    color: var(--ink);
+    margin-bottom: 1.25rem;
+}
+
+/* Category Bars */
+
+.category-bars-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.category-bar-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+}
+
+.category-bar-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.875rem;
+}
+
+.cat-total-val {
+    font-weight: 600;
+    color: var(--ink);
+}
+
+.cat-bar-track {
+    height: 8px;
+    background: var(--paper-warm);
+    border-radius: 999px;
+    overflow: hidden;
+}
+
+.cat-bar-fill {
+    height: 100%;
+    border-radius: 999px;
+    transition: width 0.5s ease;
+}
+
+/* Category Colors */
+
+.cat-food, .cat-pill-food, .cat-fill-food { background: #e67e22; color: #ffffff; }
+.cat-bills, .cat-pill-bills, .cat-fill-bills { background: #e74c3c; color: #ffffff; }
+.cat-transport, .cat-pill-transport, .cat-fill-transport { background: #3498db; color: #ffffff; }
+.cat-health, .cat-pill-health, .cat-fill-health { background: #2ecc71; color: #ffffff; }
+.cat-shopping, .cat-pill-shopping, .cat-fill-shopping { background: #9b59b6; color: #ffffff; }
+.cat-entertainment, .cat-pill-entertainment, .cat-fill-entertainment { background: #f1c40f; color: #000000; }
+.cat-other, .cat-pill-other, .cat-fill-other { background: #7f8c8d; color: #ffffff; }
+
+.cat-name-badge {
+    display: inline-block;
+    padding: 0.25rem 0.65rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+}
+
+.cat-pill {
+    display: inline-block;
+    padding: 0.25rem 0.65rem;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+/* Records Header & Table */
+
+.records-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.filter-form { width: 100%; max-width: 580px; }
+
+.filter-group {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+.filter-input { flex: 1; margin-bottom: 0; }
+.filter-select { width: 160px; margin-bottom: 0; }
+.filter-btn { padding: 0.6rem 1rem; }
+.clear-filter-btn { padding: 0.6rem 1rem; color: var(--danger); border-color: #f5c6c2; }
+
+/* Table */
+
+.table-responsive {
+    width: 100%;
+    overflow-x: auto;
+}
+
+.expenses-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+    text-align: left;
+}
+
+.expenses-table th {
+    background: var(--paper-warm);
+    color: var(--ink-soft);
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 0.85rem 1rem;
+    border-bottom: 1px solid var(--border);
+}
+
+.expenses-table td {
+    padding: 1rem;
+    border-bottom: 1px solid var(--border-soft);
+    color: var(--ink);
+}
+
+.expenses-table tr:last-child td {
+    border-bottom: none;
+}
+
+.expenses-table tr:hover td {
+    background: rgba(0,0,0,0.015);
+}
+
+.expense-date { font-family: monospace; font-size: 0.85rem; color: var(--ink-muted); }
+.expense-desc { font-weight: 500; }
+.expense-amount { font-family: var(--font-display); font-size: 1.05rem; font-weight: 600; text-align: right; }
+
+.expense-actions {
+    display: flex;
+    gap: 0.5rem;
+    justify-content: center;
+}
+
+.action-btn {
+    font-size: 0.75rem;
+    font-weight: 500;
+    padding: 0.25rem 0.6rem;
+    border-radius: 4px;
+    transition: background 0.2s;
+}
+
+.edit-btn { background: var(--paper-warm); color: var(--ink-soft); }
+.edit-btn:hover { background: var(--border); }
+.delete-btn { background: var(--danger-light); color: var(--danger); }
+.delete-btn:hover { background: #f8d7da; }
+
+.empty-state {
+    text-align: center;
+    padding: 3rem 1rem;
+}
+
+.empty-icon { font-size: 2.5rem; display: block; margin-bottom: 0.75rem; }
+.empty-text { font-size: 1rem; color: var(--ink-muted); margin-bottom: 1.5rem; }
+
+/* ------------------------------------------------------------------ */
+/* Responsive                                                          */
+/* ------------------------------------------------------------------ */
+
+@media (max-width: 900px) {
+    .metrics-grid { grid-template-columns: 1fr; }
+    .dashboard-header { flex-direction: column; align-items: flex-start; gap: 1rem; }
+    .filter-group { flex-direction: column; width: 100%; }
+    .filter-select, .filter-input { width: 100%; }
+}
+
+/* ------------------------------------------------------------------ */
 /* Responsive                                                          */
 /* ------------------------------------------------------------------ */
 
