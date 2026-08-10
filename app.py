@@ -7,8 +7,9 @@ from database.db import (
     init_db, seed_db, create_user, get_user_by_email, get_user_by_id,
     get_user_expenses, get_expense_summary, get_category_totals, add_expense_db,
     get_available_months, get_monthly_trends, get_monthly_analytics_summary,
-    get_inter_category_stats
+    get_inter_category_stats, seed_synthetic_7_months
 )
+
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", "spendly-secret-key-dev-mode-2026")
@@ -68,12 +69,16 @@ def register():
         if user_id is None:
             return render_template("register.html", error="An account with this email address already exists.")
 
+        # Seed sample 7-month transactions so new user ID has rich analytics & time tracker data immediately
+        seed_synthetic_7_months(user_id)
+
         # Log in newly registered user
         session.clear()
         session["user_id"] = user_id
         return redirect(url_for("dashboard"))
 
     return render_template("register.html")
+
 
 
 @app.route("/login", methods=["GET", "POST"])
