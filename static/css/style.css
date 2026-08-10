@@ -1817,6 +1817,174 @@ a { color: inherit; text-decoration: none; }
 }
 
 /* ------------------------------------------------------------------ */
+/* Custom Time Tracker                                                 */
+/* ------------------------------------------------------------------ */
+
+.time-tracker-card {
+    background: var(--paper-card);
+    border: 1px solid var(--border);
+    margin-bottom: 2rem;
+}
+
+.time-tracker-grid {
+    display: flex;
+    align-items: flex-end;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin-bottom: 1.25rem;
+}
+
+.date-input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+}
+
+.date-input-group label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    color: var(--ink-muted);
+}
+
+.date-input-group input {
+    margin-bottom: 0;
+}
+
+.time-tracker-actions {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+.time-presets {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    flex-wrap: wrap;
+    padding-top: 0.85rem;
+    border-top: 1px dashed var(--border);
+}
+
+.preset-label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--ink-muted);
+}
+
+.preset-pill {
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 0.25rem 0.65rem;
+    border-radius: 999px;
+    background: var(--paper-warm);
+    color: var(--ink-soft);
+    text-decoration: none;
+    transition: all 0.2s;
+    border: 1px solid var(--border-soft);
+}
+
+.preset-pill:hover {
+    background: var(--accent-light);
+    color: var(--accent);
+    border-color: var(--accent);
+}
+
+/* ------------------------------------------------------------------ */
+/* Inter-Category Statistics Matrix                                   */
+/* ------------------------------------------------------------------ */
+
+.inter-category-card {
+    border: 1px solid var(--border);
+}
+
+.inter-highlights-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.25rem;
+    margin-bottom: 1.5rem;
+}
+
+.inter-stat-badge {
+    background: var(--paper-warm);
+    border: 1px solid var(--border-soft);
+    border-radius: var(--radius-sm);
+    padding: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.inter-stat-icon {
+    font-size: 1.6rem;
+}
+
+.inter-stat-label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    color: var(--ink-muted);
+    display: block;
+}
+
+.inter-stat-val {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--ink);
+}
+
+/* Inter-Matrix Table */
+
+.inter-matrix-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.88rem;
+}
+
+.inter-matrix-table th {
+    background: var(--paper-warm);
+    padding: 0.75rem 1rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    color: var(--ink-muted);
+    border-bottom: 1px solid var(--border);
+}
+
+.inter-matrix-table td {
+    padding: 0.85rem 1rem;
+    border-bottom: 1px solid var(--border-soft);
+}
+
+.matrix-cell {
+    font-family: monospace;
+    font-size: 0.85rem;
+    text-align: right;
+    color: var(--ink);
+}
+
+.matrix-peak-cell {
+    background: rgba(193, 127, 36, 0.12);
+    font-weight: 700;
+    color: var(--accent);
+    border-radius: 4px;
+}
+
+.matrix-total-cell {
+    font-family: var(--font-display);
+    font-weight: 700;
+    text-align: right;
+    color: var(--ink);
+}
+
+.matrix-avg-cell {
+    font-family: monospace;
+    font-weight: 600;
+    text-align: right;
+    color: var(--accent);
+}
+
+/* ------------------------------------------------------------------ */
 /* Responsive                                                          */
 /* ------------------------------------------------------------------ */
 

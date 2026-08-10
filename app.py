@@ -6,7 +6,8 @@ from werkzeug.security import check_password_hash
 from database.db import (
     init_db, seed_db, create_user, get_user_by_email, get_user_by_id,
     get_user_expenses, get_expense_summary, get_category_totals, add_expense_db,
-    get_available_months, get_monthly_trends, get_monthly_analytics_summary
+    get_available_months, get_monthly_trends, get_monthly_analytics_summary,
+    get_inter_category_stats
 )
 
 app = Flask(__name__)
@@ -129,13 +130,16 @@ def dashboard():
     selected_month = request.args.get("month", "All")
     category_filter = request.args.get("category", "All")
     search_query = request.args.get("search", "").strip()
+    start_date = request.args.get("start_date", "").strip()
+    end_date = request.args.get("end_date", "").strip()
 
-    expenses = get_user_expenses(g.user["id"], month=selected_month, category=category_filter, search=search_query)
-    summary = get_expense_summary(g.user["id"], month=selected_month)
-    category_totals = get_category_totals(g.user["id"], month=selected_month)
+    expenses = get_user_expenses(g.user["id"], month=selected_month, category=category_filter, search=search_query, start_date=start_date, end_date=end_date)
+    summary = get_expense_summary(g.user["id"], month=selected_month, start_date=start_date, end_date=end_date)
+    category_totals = get_category_totals(g.user["id"], month=selected_month, start_date=start_date, end_date=end_date)
     available_months = get_available_months(g.user["id"])
     monthly_trends = get_monthly_trends(g.user["id"])
     analytics_summary = get_monthly_analytics_summary(g.user["id"], month=selected_month)
+    inter_category_stats = get_inter_category_stats(g.user["id"])
 
     return render_template(
         "dashboard.html",
@@ -145,9 +149,12 @@ def dashboard():
         available_months=available_months,
         monthly_trends=monthly_trends,
         analytics_summary=analytics_summary,
+        inter_category_stats=inter_category_stats,
         selected_month=selected_month,
         selected_category=category_filter,
-        selected_search=search_query
+        selected_search=search_query,
+        selected_start_date=start_date,
+        selected_end_date=end_date
     )
 
 

@@ -10,12 +10,56 @@
         <div class="dashboard-header">
             <div>
                 <h1 class="dashboard-title">Welcome back, {{ g.user.name.split()[0] }}</h1>
-                <p class="dashboard-subtitle">Financial Analytics, Category Visualizations & Expense Tracker</p>
+                <p class="dashboard-subtitle">Custom Time Tracking, Inter-Category Matrix & Financial Analytics</p>
             </div>
             <div class="dashboard-top-actions">
                 <a href="{{ url_for('profile') }}" class="btn-ghost">View Profile</a>
                 <a href="{{ url_for('add_expense') }}" class="btn-primary">+ Add Expense</a>
             </div>
+        </div>
+
+        <!-- Custom Time Tracker Bar Card -->
+        <div class="dashboard-card time-tracker-card">
+            <div class="card-header-flex" style="margin-bottom: 1rem;">
+                <div>
+                    <h2 class="card-title" style="margin-bottom: 0.2rem;">Custom Time Tracker</h2>
+                    <p class="card-sub" style="margin-bottom: 0;">Filter analytics and records by exact custom date range</p>
+                </div>
+                <span class="analytics-badge" style="background: rgba(52, 152, 219, 0.15); color: #3498db;">⏱️ Custom Range</span>
+            </div>
+
+            <form method="GET" action="{{ url_for('dashboard') }}" class="time-tracker-form">
+                <input type="hidden" name="category" value="{{ selected_category }}">
+                <input type="hidden" name="search" value="{{ selected_search }}">
+                
+                <div class="time-tracker-grid">
+                    <div class="date-input-group">
+                        <label for="start_date">Start Date</label>
+                        <input type="date" id="start_date" name="start_date" value="{{ selected_start_date }}" class="form-input">
+                    </div>
+
+                    <div class="date-input-group">
+                        <label for="end_date">End Date</label>
+                        <input type="date" id="end_date" name="end_date" value="{{ selected_end_date }}" class="form-input">
+                    </div>
+
+                    <div class="time-tracker-actions">
+                        <button type="submit" class="btn-primary" style="padding: 0.6rem 1.25rem;">Apply Range</button>
+                        {% if selected_start_date or selected_end_date %}
+                        <a href="{{ url_for('dashboard', month=selected_month, category=selected_category) }}" class="btn-ghost clear-filter-btn">Reset Time</a>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Quick Date Presets -->
+                <div class="time-presets">
+                    <span class="preset-label">Quick Presets:</span>
+                    <a href="{{ url_for('dashboard', start_date='2026-08-03', end_date='2026-08-10') }}" class="preset-pill">⚡ Last 7 Days</a>
+                    <a href="{{ url_for('dashboard', start_date='2026-07-11', end_date='2026-08-10') }}" class="preset-pill">⚡ Last 30 Days</a>
+                    <a href="{{ url_for('dashboard', start_date='2026-05-10', end_date='2026-08-10') }}" class="preset-pill">⚡ Last 90 Days</a>
+                    <a href="{{ url_for('dashboard', start_date='2026-01-01', end_date='2026-12-31') }}" class="preset-pill">⚡ YTD 2026</a>
+                </div>
+            </form>
         </div>
 
         <!-- Metric Summary Cards Grid -->
@@ -24,7 +68,9 @@
                 <span class="metric-icon">💳</span>
                 <div class="metric-info">
                     <span class="metric-label">
-                        {% if selected_month != 'All' %}
+                        {% if selected_start_date or selected_end_date %}
+                            Spent (Custom Range)
+                        {% elif selected_month != 'All' %}
                             Spent in {{ analytics_summary.month_label }}
                         {% else %}
                             Total Spent (7 Months)
@@ -143,6 +189,70 @@
 
         </div>
 
+        <!-- Inter-Category Statistics Across Months Matrix -->
+        {% if inter_category_stats and inter_category_stats.matrix_rows %}
+        <div class="dashboard-card inter-category-card">
+            <div class="card-header-flex">
+                <div>
+                    <h2 class="card-title">Inter-Category Statistics Across Months</h2>
+                    <p class="card-sub">Cross-tabulated monthly category matrix & expenditure trend highlights</p>
+                </div>
+                <span class="analytics-badge" style="background: rgba(41, 128, 185, 0.15); color: #2980b9;">📈 Inter-Category Matrix</span>
+            </div>
+
+            <!-- Inter-Category Summary Highlights -->
+            <div class="inter-highlights-grid">
+                <div class="inter-stat-badge">
+                    <span class="inter-stat-icon">👑</span>
+                    <div>
+                        <span class="inter-stat-label">Highest Avg Category</span>
+                        <span class="inter-stat-val">{{ inter_category_stats.highest_avg_cat }} (₹{{ "%.2f"|format(inter_category_stats.highest_avg_amount) }}/mo)</span>
+                    </div>
+                </div>
+
+                <div class="inter-stat-badge">
+                    <span class="inter-stat-icon">🚀</span>
+                    <div>
+                        <span class="inter-stat-label">Fastest Growing Category</span>
+                        <span class="inter-stat-val">{{ inter_category_stats.growth_cat }} (+{{ inter_category_stats.growth_pct }}% growth)</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Matrix Table -->
+            <div class="table-responsive">
+                <table class="inter-matrix-table">
+                    <thead>
+                        <tr>
+                            <th>Category</th>
+                            {% for m in inter_category_stats.months_header %}
+                            <th style="text-align: right;">{{ m.label }}</th>
+                            {% endfor %}
+                            <th style="text-align: right;">Total</th>
+                            <th style="text-align: right;">Monthly Avg</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in inter_category_stats.matrix_rows %}
+                        <tr>
+                            <td>
+                                <span class="cat-pill cat-pill-{{ row.category.lower() }}">{{ row.category }}</span>
+                            </td>
+                            {% for mv in row.monthly_values %}
+                            <td class="matrix-cell {% if mv.amount == row.max_amount and row.max_amount > 0 %}matrix-peak-cell{% endif %}">
+                                ₹{{ "%.0f"|format(mv.amount) }}
+                            </td>
+                            {% endfor %}
+                            <td class="matrix-total-cell">₹{{ "%.2f"|format(row.total) }}</td>
+                            <td class="matrix-avg-cell">₹{{ "%.2f"|format(row.avg) }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% endif %}
+
         <!-- End-of-Month Analytics Insights Summary -->
         <div class="dashboard-card insights-card">
             <div class="card-header-flex">
@@ -200,6 +310,9 @@
                 <h2 class="card-title">Expense Transactions</h2>
                 
                 <form method="GET" action="{{ url_for('dashboard') }}" class="filter-form">
+                    <input type="hidden" name="start_date" value="{{ selected_start_date }}">
+                    <input type="hidden" name="end_date" value="{{ selected_end_date }}">
+
                     <div class="filter-group">
                         
                         <!-- Month Filter Dropdown -->
@@ -226,8 +339,8 @@
                         <input type="text" name="search" value="{{ selected_search }}" placeholder="Search note..." class="form-input filter-input">
                         <button type="submit" class="btn-ghost filter-btn">Filter</button>
                         
-                        {% if selected_month != 'All' or selected_category != 'All' or selected_search %}
-                        <a href="{{ url_for('dashboard') }}" class="btn-ghost clear-filter-btn">Reset</a>
+                        {% if selected_month != 'All' or selected_category != 'All' or selected_search or selected_start_date or selected_end_date %}
+                        <a href="{{ url_for('dashboard') }}" class="btn-ghost clear-filter-btn">Reset All</a>
                         {% endif %}
                     </div>
                 </form>
