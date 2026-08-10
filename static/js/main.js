@@ -1,4 +1,4 @@
-// main.js — Interactive Video Modal & Product Walkthrough Logic
+// main.js — Interactive Video Modal, Sound Effects & Product Walkthrough Logic
 
 document.addEventListener('DOMContentLoaded', function () {
     const modal = document.getElementById('video-modal');
@@ -31,11 +31,111 @@ document.addEventListener('DOMContentLoaded', function () {
 
     let currentChapter = 1;
     let isPlaying = true;
-    let playbackSpeed = 1.0; // Standard 1.0x playback speed
+    let playbackSpeed = 1.0;
     let progressPercent = 0;
     let timerInterval = null;
     let typeTimer = null;
-    const TOTAL_DURATION_SEC = 60; // 1 Minute total walkthrough
+    let isMuted = false;
+    const TOTAL_DURATION_SEC = 20; // 20 Seconds total (5 seconds per chapter)
+
+    // ------------------------------------------------------------------ //
+    // Web Audio API — Real-time Metallic Coin & Cash Register Synthesizer //
+    // ------------------------------------------------------------------ //
+
+    let audioCtx = null;
+
+    function getAudioContext() {
+        if (!audioCtx) {
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+        if (audioCtx.state === 'suspended') {
+            audioCtx.resume();
+        }
+        return audioCtx;
+    }
+
+    // Metallic Coin Clink Sound Effect
+    function playCoinSound() {
+        if (isMuted) return;
+        try {
+            const ctx = getAudioContext();
+            const now = ctx.currentTime;
+
+            const osc1 = ctx.createOscillator();
+            const osc2 = ctx.createOscillator();
+            const gain = ctx.createGain();
+
+            osc1.type = 'sine';
+            osc2.type = 'sine';
+
+            osc1.frequency.setValueAtTime(1600, now);
+            osc1.frequency.exponentialRampToValueAtTime(3400, now + 0.06);
+
+            osc2.frequency.setValueAtTime(2400, now);
+            osc2.frequency.exponentialRampToValueAtTime(4800, now + 0.06);
+
+            gain.gain.setValueAtTime(0.3, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
+
+            osc1.connect(gain);
+            osc2.connect(gain);
+            gain.connect(ctx.destination);
+
+            osc1.start(now);
+            osc2.start(now);
+            osc1.stop(now + 0.2);
+            osc2.stop(now + 0.2);
+        } catch (e) {
+            console.log("Audio contextual playback", e);
+        }
+    }
+
+    // Classic Cash Register Ka-Ching Sound Effect
+    function playCashRegisterSound() {
+        if (isMuted) return;
+        try {
+            const ctx = getAudioContext();
+            const now = ctx.currentTime;
+
+            // 1. Mechanical latch click
+            const clickOsc = ctx.createOscillator();
+            const clickGain = ctx.createGain();
+            clickOsc.type = 'square';
+            clickOsc.frequency.setValueAtTime(280, now);
+            clickGain.gain.setValueAtTime(0.2, now);
+            clickGain.gain.exponentialRampToValueAtTime(0.001, now + 0.035);
+            clickOsc.connect(clickGain);
+            clickGain.connect(ctx.destination);
+            clickOsc.start(now);
+            clickOsc.stop(now + 0.035);
+
+            // 2. High metallic chime ring (Ka-ching bell)
+            const chime1 = ctx.createOscillator();
+            const chime2 = ctx.createOscillator();
+            const chimeGain = ctx.createGain();
+
+            chime1.type = 'sine';
+            chime2.type = 'sine';
+
+            chime1.frequency.setValueAtTime(1800, now + 0.035);
+            chime2.frequency.setValueAtTime(2700, now + 0.035);
+
+            chimeGain.gain.setValueAtTime(0, now);
+            chimeGain.gain.setValueAtTime(0.35, now + 0.035);
+            chimeGain.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
+
+            chime1.connect(chimeGain);
+            chime2.connect(chimeGain);
+            chimeGain.connect(ctx.destination);
+
+            chime1.start(now + 0.035);
+            chime2.start(now + 0.035);
+            chime1.stop(now + 0.4);
+            chime2.stop(now + 0.4);
+        } catch (e) {
+            console.log("Audio contextual playback", e);
+        }
+    }
 
     // ------------------------------------------------------------------ //
     // Slide 1 Typewriter Simulation                                       //
@@ -70,7 +170,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 btnEl.style.opacity = "1";
                 clearInterval(typeTimer);
             }
-        }, 120);
+        }, 90);
     }
 
     // ------------------------------------------------------------------ //
@@ -81,9 +181,10 @@ document.addEventListener('DOMContentLoaded', function () {
         if (btn) {
             btn.addEventListener('click', () => {
                 progressPercent = 0;
-                setChapter(1);
+                setChapter(1, true, false);
                 modal.showModal();
                 startPlayback();
+                playCoinSound();
             });
         }
     });
@@ -111,10 +212,11 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     // ------------------------------------------------------------------ //
-    // Chapter Switching                                                  //
+    // Chapter Switching & Sound Triggers                                 //
     // ------------------------------------------------------------------ //
 
-    function setChapter(chapterNum, setProgress = true) {
+    function setChapter(chapterNum, setProgress = true, playSound = true) {
+        const prevChapter = currentChapter;
         currentChapter = parseInt(chapterNum, 10);
         
         chapterBtns.forEach(b => {
@@ -137,6 +239,14 @@ document.addEventListener('DOMContentLoaded', function () {
             playSlide1Animation();
         }
 
+        if (playSound && prevChapter !== currentChapter) {
+            if (currentChapter === 2 || currentChapter === 4) {
+                playCashRegisterSound();
+            } else {
+                playCoinSound();
+            }
+        }
+
         if (setProgress) {
             progressPercent = (currentChapter - 1) * 25;
             updatePlayerUI();
@@ -146,7 +256,7 @@ document.addEventListener('DOMContentLoaded', function () {
     chapterBtns.forEach(btn => {
         btn.addEventListener('click', () => {
             stopPlayback(); // Pause auto-advance when user manually clicks
-            setChapter(btn.dataset.chapter, true);
+            setChapter(btn.dataset.chapter, true, true);
         });
     });
 
@@ -160,10 +270,8 @@ document.addEventListener('DOMContentLoaded', function () {
         }
         if (timeDisplay) {
             const totalElapsedSec = Math.round((progressPercent / 100) * TOTAL_DURATION_SEC);
-            const minutes = Math.floor(totalElapsedSec / 60);
-            const seconds = totalElapsedSec % 60;
-            const formattedSec = seconds < 10 ? '0' + seconds : seconds;
-            timeDisplay.textContent = `${minutes}:${formattedSec} / 1:00`;
+            const formattedSec = totalElapsedSec < 10 ? '0' + totalElapsedSec : totalElapsedSec;
+            timeDisplay.textContent = `0:${formattedSec} / 0:20`;
         }
     }
 
@@ -173,12 +281,12 @@ document.addEventListener('DOMContentLoaded', function () {
         if (playIcon) playIcon.textContent = '⏸';
         if (currentChapter === 1) playSlide1Animation();
 
-        // Updates smoothly every 150ms
+        // Updates smoothly every 100ms
         timerInterval = setInterval(() => {
             if (!isPlaying) return;
 
-            // Increment: 0.25% per 150ms at 1.0x = 100% in 60s
-            progressPercent += (0.25 * playbackSpeed);
+            // Increment: 0.5% per 100ms at 1.0x = 100% in 20s
+            progressPercent += (0.5 * playbackSpeed);
             
             if (progressPercent >= 100) {
                 progressPercent = 0;
@@ -191,11 +299,11 @@ document.addEventListener('DOMContentLoaded', function () {
             else if (progressPercent > 25) targetChapter = 2;
 
             if (targetChapter !== currentChapter) {
-                setChapter(targetChapter, false);
+                setChapter(targetChapter, false, true);
             }
 
             updatePlayerUI();
-        }, 150);
+        }, 100);
     }
 
     function stopPlayback() {
@@ -240,7 +348,7 @@ document.addEventListener('DOMContentLoaded', function () {
             else if (progressPercent > 50) targetChapter = 3;
             else if (progressPercent > 25) targetChapter = 2;
 
-            setChapter(targetChapter, false);
+            setChapter(targetChapter, false, true);
             updatePlayerUI();
         });
     }
@@ -257,6 +365,7 @@ document.addEventListener('DOMContentLoaded', function () {
     if (sandboxAddBtn && sandboxAmt) {
         sandboxAddBtn.addEventListener('click', () => {
             stopPlayback();
+            playCashRegisterSound(); // Play cash register ka-ching on adding expense in sandbox!
             const addedAmt = parseFloat(sandboxAmt.value) || 0;
             currentTotal += addedAmt;
             if (sandboxTotalVal) {
