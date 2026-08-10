@@ -31,10 +31,47 @@ document.addEventListener('DOMContentLoaded', function () {
 
     let currentChapter = 1;
     let isPlaying = true;
-    let playbackSpeed = 0.5; // Default to comfortable 0.5x pace
+    let playbackSpeed = 1.0; // Standard 1.0x playback speed
     let progressPercent = 0;
     let timerInterval = null;
-    const TOTAL_DURATION_SEC = 120; // 2 Minutes total (30 sec per chapter)
+    let typeTimer = null;
+    const TOTAL_DURATION_SEC = 60; // 1 Minute total walkthrough
+
+    // ------------------------------------------------------------------ //
+    // Slide 1 Typewriter Simulation                                       //
+    // ------------------------------------------------------------------ //
+
+    function playSlide1Animation() {
+        if (typeTimer) clearInterval(typeTimer);
+        const amtEl = document.querySelector('.animated-type-amount');
+        const noteEl = document.querySelector('.animated-type-note');
+        const btnEl = document.querySelector('.sim-btn-active');
+        if (!amtEl || !noteEl || !btnEl) return;
+
+        const amtText = "₹450";
+        const noteText = "Dinner with friends";
+        let step = 0;
+
+        amtEl.textContent = "₹";
+        noteEl.textContent = "";
+        btnEl.textContent = "Adding expense...";
+        btnEl.style.opacity = "0.7";
+
+        typeTimer = setInterval(() => {
+            step++;
+            if (step <= amtText.length) {
+                amtEl.textContent = amtText.substring(0, step);
+            }
+            if (step <= noteText.length) {
+                noteEl.textContent = noteText.substring(0, step);
+            }
+            if (step >= Math.max(amtText.length, noteText.length)) {
+                btnEl.textContent = "✓ Added to Spendly";
+                btnEl.style.opacity = "1";
+                clearInterval(typeTimer);
+            }
+        }, 120);
+    }
 
     // ------------------------------------------------------------------ //
     // Open & Close Dialog Handlers                                        //
@@ -96,6 +133,10 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         });
 
+        if (currentChapter === 1) {
+            playSlide1Animation();
+        }
+
         if (setProgress) {
             progressPercent = (currentChapter - 1) * 25;
             updatePlayerUI();
@@ -104,7 +145,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     chapterBtns.forEach(btn => {
         btn.addEventListener('click', () => {
-            stopPlayback(); // Pause auto-advance so user can read manually
+            stopPlayback(); // Pause auto-advance when user manually clicks
             setChapter(btn.dataset.chapter, true);
         });
     });
@@ -122,7 +163,7 @@ document.addEventListener('DOMContentLoaded', function () {
             const minutes = Math.floor(totalElapsedSec / 60);
             const seconds = totalElapsedSec % 60;
             const formattedSec = seconds < 10 ? '0' + seconds : seconds;
-            timeDisplay.textContent = `${minutes}:${formattedSec} / 2:00`;
+            timeDisplay.textContent = `${minutes}:${formattedSec} / 1:00`;
         }
     }
 
@@ -130,13 +171,14 @@ document.addEventListener('DOMContentLoaded', function () {
         stopPlayback();
         isPlaying = true;
         if (playIcon) playIcon.textContent = '⏸';
+        if (currentChapter === 1) playSlide1Animation();
 
-        // Updates smoothly every 200ms
+        // Updates smoothly every 150ms
         timerInterval = setInterval(() => {
             if (!isPlaying) return;
 
-            // Increment: 0.166% per 200ms at 1.0x = 100% in 120s
-            progressPercent += (0.166 * playbackSpeed);
+            // Increment: 0.25% per 150ms at 1.0x = 100% in 60s
+            progressPercent += (0.25 * playbackSpeed);
             
             if (progressPercent >= 100) {
                 progressPercent = 0;
@@ -153,11 +195,12 @@ document.addEventListener('DOMContentLoaded', function () {
             }
 
             updatePlayerUI();
-        }, 200);
+        }, 150);
     }
 
     function stopPlayback() {
         if (timerInterval) clearInterval(timerInterval);
+        if (typeTimer) clearInterval(typeTimer);
         isPlaying = false;
         if (playIcon) playIcon.textContent = '▶';
     }
@@ -208,7 +251,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     let currentTotal = 12450;
     if (sandboxAmt) {
-        sandboxAmt.addEventListener('focus', () => stopPlayback()); // Pause tour while user is testing
+        sandboxAmt.addEventListener('focus', () => stopPlayback());
     }
 
     if (sandboxAddBtn && sandboxAmt) {

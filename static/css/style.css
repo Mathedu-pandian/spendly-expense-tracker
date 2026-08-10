@@ -1019,6 +1019,20 @@ a { color: inherit; text-decoration: none; }
     font-weight: 500;
 }
 
+.animated-type-amount::after,
+.animated-type-note::after {
+    content: '|';
+    animation: cursorBlink 0.8s infinite;
+    color: var(--accent);
+    margin-left: 2px;
+    font-weight: 700;
+}
+
+@keyframes cursorBlink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0; }
+}
+
 .sim-btn-active {
     background: var(--accent);
     color: white;
@@ -1028,6 +1042,7 @@ a { color: inherit; text-decoration: none; }
     font-size: 0.85rem;
     font-weight: 600;
     margin-top: 1rem;
+    transition: all 0.3s ease;
 }
 
 /* Charts preview scene */
