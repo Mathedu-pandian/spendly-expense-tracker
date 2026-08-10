@@ -18,7 +18,9 @@
         </p>
         <div class="hero-actions">
             <a href="{{ url_for('register') }}" class="btn-primary">Start tracking free</a>
-            <a href="{{ url_for('login') }}" class="btn-ghost">Sign in</a>
+            <button type="button" id="open-video-btn" class="btn-ghost btn-icon-play">
+                <span class="play-badge">▶</span> Watch Interactive Tour
+            </button>
         </div>
     </div>
     <div class="hero-visual">
@@ -57,6 +59,9 @@
                     <span class="mock-amt">₹1,800</span>
                 </div>
             </div>
+            <button type="button" id="open-video-card-btn" class="mock-visual-trigger">
+                <span class="play-circle">▶</span> Interactive Video Preview
+            </button>
         </div>
     </div>
 </section>
@@ -85,8 +90,195 @@
     <div class="cta-inner">
         <h2 class="cta-title">Ready to take control?</h2>
         <p class="cta-body">Join thousands of people who track their expenses with Spendly.</p>
-        <a href="{{ url_for('register') }}" class="btn-primary">Create free account</a>
+        <div class="cta-actions">
+            <a href="{{ url_for('register') }}" class="btn-primary">Create free account</a>
+            <button type="button" id="open-video-cta-btn" class="btn-ghost">
+                <span class="play-badge">▶</span> Watch Video Walkthrough
+            </button>
+        </div>
     </div>
 </section>
+
+<!-- ================================================================== -->
+<!-- Interactive Video Modal (<dialog>)                                 -->
+<!-- ================================================================== -->
+<dialog id="video-modal" class="interactive-video-dialog" closedby="any">
+    <div class="video-modal-container">
+        
+        <!-- Modal Header -->
+        <div class="video-modal-header">
+            <div class="video-modal-title-group">
+                <span class="video-live-badge">● LIVE INTERACTIVE TOUR</span>
+                <h3 class="video-modal-title">Spendly Product Walkthrough</h3>
+            </div>
+            <button type="button" id="close-video-modal-btn" class="video-modal-close" aria-label="Close modal">&times;</button>
+        </div>
+
+        <!-- Chapter Pills Navigation -->
+        <div class="video-chapters-nav">
+            <button type="button" class="chapter-btn active" data-chapter="1">
+                <span class="chap-num">01</span> Quick Entry
+            </button>
+            <button type="button" class="chapter-btn" data-chapter="2">
+                <span class="chap-num">02</span> Category Analytics
+            </button>
+            <button type="button" class="chapter-btn" data-chapter="3">
+                <span class="chap-num">03</span> Monthly Budgets
+            </button>
+            <button type="button" class="chapter-btn" data-chapter="4">
+                <span class="chap-num">04</span> Live Sandbox
+            </button>
+        </div>
+
+        <!-- Video Player Simulator Area -->
+        <div class="video-player-viewport">
+            
+            <!-- Chapter 1 Scene: Quick Entry -->
+            <div class="video-scene active" id="scene-1">
+                <div class="simulated-app-window">
+                    <div class="simulated-header">
+                        <div class="simulated-dots"><span></span><span></span><span></span></div>
+                        <span class="simulated-url">https://spendly.app/expenses/add</span>
+                    </div>
+                    <div class="simulated-body">
+                        <div class="simulated-form-preview">
+                            <div class="sim-badge">Step 1: Log Expense</div>
+                            <div class="sim-field">
+                                <label>Amount</label>
+                                <div class="sim-input-box animated-type-amount">₹450</div>
+                            </div>
+                            <div class="sim-field">
+                                <label>Category</label>
+                                <div class="sim-input-box sim-cat-tag">🍔 Food & Dining</div>
+                            </div>
+                            <div class="sim-field">
+                                <label>Note</label>
+                                <div class="sim-input-box animated-type-note">Dinner with friends</div>
+                            </div>
+                            <div class="sim-btn-active">✓ Added to Spendly</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Chapter 2 Scene: Category Analytics -->
+            <div class="video-scene" id="scene-2">
+                <div class="simulated-app-window">
+                    <div class="simulated-header">
+                        <div class="simulated-dots"><span></span><span></span><span></span></div>
+                        <span class="simulated-url">https://spendly.app/dashboard</span>
+                    </div>
+                    <div class="simulated-body">
+                        <div class="simulated-charts-preview">
+                            <div class="sim-badge">Step 2: Category Breakdown</div>
+                            <div class="sim-donut-container">
+                                <div class="sim-donut-chart">
+                                    <span class="donut-total">₹12,450</span>
+                                    <span class="donut-sub">March Total</span>
+                                </div>
+                            </div>
+                            <div class="sim-legend">
+                                <span class="leg-item leg-1">Bills (36%)</span>
+                                <span class="leg-item leg-2">Food (25%)</span>
+                                <span class="leg-item leg-3">Shopping (20%)</span>
+                                <span class="leg-item leg-4">Health (19%)</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Chapter 3 Scene: Monthly Budgets -->
+            <div class="video-scene" id="scene-3">
+                <div class="simulated-app-window">
+                    <div class="simulated-header">
+                        <div class="simulated-dots"><span></span><span></span><span></span></div>
+                        <span class="simulated-url">https://spendly.app/budgets</span>
+                    </div>
+                    <div class="simulated-body">
+                        <div class="simulated-budget-preview">
+                            <div class="sim-badge">Step 3: Budget Control</div>
+                            <div class="sim-budget-item">
+                                <div class="sim-budget-head">
+                                    <span>Food Budget (March)</span>
+                                    <span class="sim-budget-status ok">80% Used</span>
+                                </div>
+                                <div class="sim-progress-track">
+                                    <div class="sim-progress-bar ok" style="width: 80%;"></div>
+                                </div>
+                                <div class="sim-budget-foot">₹4,000 / ₹5,000 spent</div>
+                            </div>
+                            <div class="sim-budget-item">
+                                <div class="sim-budget-head">
+                                    <span>Bills & Utilities</span>
+                                    <span class="sim-budget-status warn">92% Used</span>
+                                </div>
+                                <div class="sim-progress-track">
+                                    <div class="sim-progress-bar warn" style="width: 92%;"></div>
+                                </div>
+                                <div class="sim-budget-foot">₹4,600 / ₹5,000 spent</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Chapter 4 Scene: Interactive Sandbox -->
+            <div class="video-scene" id="scene-4">
+                <div class="simulated-app-window sandbox-window">
+                    <div class="simulated-header">
+                        <div class="simulated-dots"><span></span><span></span><span></span></div>
+                        <span class="simulated-url">https://spendly.app/sandbox-preview</span>
+                    </div>
+                    <div class="simulated-body sandbox-body">
+                        <div class="sandbox-title">⚡ Interactive Expense Sandbox</div>
+                        <p class="sandbox-sub">Type an expense below to see the interactive chart update in real-time!</p>
+                        
+                        <div class="sandbox-form">
+                            <div class="sandbox-inputs">
+                                <input type="number" id="sandbox-amt" placeholder="Enter amount (e.g. 500)" value="600" min="1" max="100000">
+                                <select id="sandbox-cat">
+                                    <option value="Food">Food & Dining</option>
+                                    <option value="Bills">Bills & Utilities</option>
+                                    <option value="Shopping">Shopping</option>
+                                    <option value="Health">Health & Wellness</option>
+                                </select>
+                                <button type="button" id="sandbox-add-btn" class="btn-primary">Add Expense</button>
+                            </div>
+                        </div>
+
+                        <div class="sandbox-results">
+                            <div class="sandbox-total-display">Total Tracked: <strong id="sandbox-total-val">₹13,050</strong></div>
+                            <div class="sandbox-bar-preview">
+                                <div class="sandbox-bar-track">
+                                    <div id="sandbox-bar-fill" class="sandbox-bar-fill" style="width: 65%;"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Interactive Video Scrubbing Controls -->
+            <div class="video-controls-bar">
+                <button type="button" id="video-play-btn" class="player-control-btn" title="Play / Pause">
+                    <span id="video-play-icon">⏸</span>
+                </button>
+                <div class="video-scrubber-track" id="scrubber-track">
+                    <div class="video-progress-fill" id="video-progress-fill"></div>
+                </div>
+                <span class="video-time-display" id="video-time-display">0:15 / 1:00</span>
+                <button type="button" id="video-speed-btn" class="player-speed-btn">1.0x</button>
+            </div>
+        </div>
+
+        <!-- Modal Footer CTA -->
+        <div class="video-modal-footer">
+            <span class="footer-hint">Ready to manage your expenses effortlessly?</span>
+            <a href="{{ url_for('register') }}" class="btn-primary">Get started with Spendly free</a>
+        </div>
+
+    </div>
+</dialog>
 
 {% endblock %}
