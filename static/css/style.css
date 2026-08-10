@@ -1170,6 +1170,31 @@ a { color: inherit; text-decoration: none; }
     cursor: pointer;
 }
 
+.music-toggle-btn {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: var(--ink-faint);
+    font-size: 0.75rem;
+    font-weight: 500;
+    padding: 0.25rem 0.65rem;
+    border-radius: 999px;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.2s;
+}
+
+.music-toggle-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+    color: #ffffff;
+}
+
+.music-toggle-btn.active {
+    background: rgba(193, 127, 36, 0.2);
+    border-color: var(--accent-2);
+    color: var(--accent-2);
+    font-weight: 600;
+}
+
 /* Modal Footer */
 
 .video-modal-footer {

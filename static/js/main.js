@@ -1,4 +1,4 @@
-// main.js — Interactive Video Modal, Sound Effects & Product Walkthrough Logic
+// main.js — Interactive Video Modal, Sound Effects & Hans Zimmer Cornfield Chase Audio Engine
 
 document.addEventListener('DOMContentLoaded', function () {
     const modal = document.getElementById('video-modal');
@@ -21,6 +21,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const progressBar = document.getElementById('video-progress-fill');
     const timeDisplay = document.getElementById('video-time-display');
     const speedBtn = document.getElementById('video-speed-btn');
+    const musicToggleBtn = document.getElementById('music-toggle-btn');
     const scrubberTrack = document.getElementById('scrubber-track');
 
     // Interactive Sandbox elements
@@ -36,10 +37,11 @@ document.addEventListener('DOMContentLoaded', function () {
     let timerInterval = null;
     let typeTimer = null;
     let isMuted = false;
+    let isMusicEnabled = true;
     const TOTAL_DURATION_SEC = 20; // 20 Seconds total (5 seconds per chapter)
 
     // ------------------------------------------------------------------ //
-    // Web Audio API — Real-time Metallic Coin & Cash Register Synthesizer //
+    // Web Audio API — Real-time Sound Effects & Cornfield Chase Engine   //
     // ------------------------------------------------------------------ //
 
     let audioCtx = null;
@@ -74,7 +76,7 @@ document.addEventListener('DOMContentLoaded', function () {
             osc2.frequency.setValueAtTime(2400, now);
             osc2.frequency.exponentialRampToValueAtTime(4800, now + 0.06);
 
-            gain.gain.setValueAtTime(0.3, now);
+            gain.gain.setValueAtTime(0.25, now);
             gain.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
 
             osc1.connect(gain);
@@ -85,9 +87,7 @@ document.addEventListener('DOMContentLoaded', function () {
             osc2.start(now);
             osc1.stop(now + 0.2);
             osc2.stop(now + 0.2);
-        } catch (e) {
-            console.log("Audio contextual playback", e);
-        }
+        } catch (e) {}
     }
 
     // Classic Cash Register Ka-Ching Sound Effect
@@ -97,7 +97,6 @@ document.addEventListener('DOMContentLoaded', function () {
             const ctx = getAudioContext();
             const now = ctx.currentTime;
 
-            // 1. Mechanical latch click
             const clickOsc = ctx.createOscillator();
             const clickGain = ctx.createGain();
             clickOsc.type = 'square';
@@ -109,7 +108,6 @@ document.addEventListener('DOMContentLoaded', function () {
             clickOsc.start(now);
             clickOsc.stop(now + 0.035);
 
-            // 2. High metallic chime ring (Ka-ching bell)
             const chime1 = ctx.createOscillator();
             const chime2 = ctx.createOscillator();
             const chimeGain = ctx.createGain();
@@ -121,7 +119,7 @@ document.addEventListener('DOMContentLoaded', function () {
             chime2.frequency.setValueAtTime(2700, now + 0.035);
 
             chimeGain.gain.setValueAtTime(0, now);
-            chimeGain.gain.setValueAtTime(0.35, now + 0.035);
+            chimeGain.gain.setValueAtTime(0.3, now + 0.035);
             chimeGain.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
 
             chime1.connect(chimeGain);
@@ -132,8 +130,117 @@ document.addEventListener('DOMContentLoaded', function () {
             chime2.start(now + 0.035);
             chime1.stop(now + 0.4);
             chime2.stop(now + 0.4);
-        } catch (e) {
-            console.log("Audio contextual playback", e);
+        } catch (e) {}
+    }
+
+    // ------------------------------------------------------------------ //
+    // Hans Zimmer — Cornfield Chase Synthesizer Engine                   //
+    // ------------------------------------------------------------------ //
+
+    let musicPlaying = false;
+    let musicInterval = null;
+    let organFilter = null;
+    let masterGain = null;
+
+    // Cornfield Chase Arpeggios (Am - F - C - G)
+    const CHORDS = [
+        { name: 'Am', bass: 110.0, notes: [220.0, 329.63, 440.0, 523.25, 659.25, 880.0, 1046.5] },
+        { name: 'F',  bass: 87.31, notes: [174.61, 261.63, 349.23, 440.0, 523.25, 698.46, 880.0] },
+        { name: 'C',  bass: 130.81, notes: [261.63, 392.00, 523.25, 659.25, 783.99, 1046.5, 1318.5] },
+        { name: 'G',  bass: 98.00, notes: [196.00, 293.66, 392.00, 493.88, 587.33, 783.99, 987.77] }
+    ];
+
+    function playOrganNote(freq, duration, gainVal = 0.1) {
+        if (!isMusicEnabled || !musicPlaying) return;
+        try {
+            const ctx = getAudioContext();
+            const now = ctx.currentTime;
+
+            const osc1 = ctx.createOscillator();
+            const osc2 = ctx.createOscillator();
+            const noteGain = ctx.createGain();
+
+            osc1.type = 'triangle'; // Organ pipe warmth
+            osc2.type = 'sine';     // Octave overtone
+
+            osc1.frequency.setValueAtTime(freq, now);
+            osc2.frequency.setValueAtTime(freq * 2, now);
+
+            noteGain.gain.setValueAtTime(gainVal, now);
+            noteGain.gain.exponentialRampToValueAtTime(0.001, now + duration);
+
+            osc1.connect(noteGain);
+            osc2.connect(noteGain);
+            
+            if (organFilter) {
+                noteGain.connect(organFilter);
+            } else {
+                noteGain.connect(ctx.destination);
+            }
+
+            osc1.start(now);
+            osc2.start(now);
+            osc1.stop(now + duration);
+            osc2.stop(now + duration);
+        } catch (e) {}
+    }
+
+    function startCornfieldChaseEngine() {
+        if (!isMusicEnabled || musicPlaying) return;
+        musicPlaying = true;
+        
+        try {
+            const ctx = getAudioContext();
+            const now = ctx.currentTime;
+
+            organFilter = ctx.createBiquadFilter();
+            organFilter.type = 'lowpass';
+            organFilter.frequency.setValueAtTime(700, now);
+            organFilter.frequency.linearRampToValueAtTime(2800, now + 15);
+
+            masterGain = ctx.createGain();
+            masterGain.gain.setValueAtTime(0.2, now);
+
+            organFilter.connect(masterGain);
+            masterGain.connect(ctx.destination);
+
+            let noteIdx = 0;
+            let chordIdx = 0;
+            let tickCount = 0;
+
+            // Hans Zimmer rapid 12/8 organ tempo (110ms per note)
+            musicInterval = setInterval(() => {
+                if (!musicPlaying || !isMusicEnabled) return;
+                
+                const currentChord = CHORDS[chordIdx];
+                const freq = currentChord.notes[noteIdx % currentChord.notes.length];
+                
+                playOrganNote(freq, 0.3, 0.08);
+
+                // Sub-bass organ pedal every 8 ticks
+                if (noteIdx % 8 === 0) {
+                    playOrganNote(currentChord.bass, 1.0, 0.18);
+                }
+
+                noteIdx++;
+                tickCount++;
+
+                if (tickCount % 16 === 0) {
+                    chordIdx = (chordIdx + 1) % CHORDS.length;
+                    noteIdx = 0;
+                }
+            }, 110);
+
+        } catch (e) {}
+    }
+
+    function stopCornfieldChaseEngine() {
+        musicPlaying = false;
+        if (musicInterval) clearInterval(musicInterval);
+        if (masterGain && audioCtx) {
+            try {
+                masterGain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.2);
+            } catch (e) {}
         }
     }
 
@@ -184,6 +291,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 setChapter(1, true, false);
                 modal.showModal();
                 startPlayback();
+                if (isMusicEnabled) startCornfieldChaseEngine();
                 playCoinSound();
             });
         }
@@ -192,6 +300,7 @@ document.addEventListener('DOMContentLoaded', function () {
     if (closeBtn) {
         closeBtn.addEventListener('click', () => {
             stopPlayback();
+            stopCornfieldChaseEngine();
             modal.close();
         });
     }
@@ -207,6 +316,7 @@ document.addEventListener('DOMContentLoaded', function () {
         );
         if (!isInDialog) {
             stopPlayback();
+            stopCornfieldChaseEngine();
             modal.close();
         }
     });
@@ -255,7 +365,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     chapterBtns.forEach(btn => {
         btn.addEventListener('click', () => {
-            stopPlayback(); // Pause auto-advance when user manually clicks
+            stopPlayback();
             setChapter(btn.dataset.chapter, true, true);
         });
     });
@@ -280,6 +390,7 @@ document.addEventListener('DOMContentLoaded', function () {
         isPlaying = true;
         if (playIcon) playIcon.textContent = '⏸';
         if (currentChapter === 1) playSlide1Animation();
+        if (isMusicEnabled) startCornfieldChaseEngine();
 
         // Updates smoothly every 100ms
         timerInterval = setInterval(() => {
@@ -309,6 +420,7 @@ document.addEventListener('DOMContentLoaded', function () {
     function stopPlayback() {
         if (timerInterval) clearInterval(timerInterval);
         if (typeTimer) clearInterval(typeTimer);
+        stopCornfieldChaseEngine();
         isPlaying = false;
         if (playIcon) playIcon.textContent = '▶';
     }
@@ -334,6 +446,21 @@ document.addEventListener('DOMContentLoaded', function () {
                 playbackSpeed = 0.5;
             }
             speedBtn.textContent = playbackSpeed + 'x';
+        });
+    }
+
+    if (musicToggleBtn) {
+        musicToggleBtn.addEventListener('click', () => {
+            isMusicEnabled = !isMusicEnabled;
+            if (isMusicEnabled) {
+                musicToggleBtn.classList.add('active');
+                musicToggleBtn.textContent = '🎵 Cornfield Chase: ON';
+                if (isPlaying) startCornfieldChaseEngine();
+            } else {
+                musicToggleBtn.classList.remove('active');
+                musicToggleBtn.textContent = '🎵 Cornfield Chase: OFF';
+                stopCornfieldChaseEngine();
+            }
         });
     }
 
@@ -365,7 +492,7 @@ document.addEventListener('DOMContentLoaded', function () {
     if (sandboxAddBtn && sandboxAmt) {
         sandboxAddBtn.addEventListener('click', () => {
             stopPlayback();
-            playCashRegisterSound(); // Play cash register ka-ching on adding expense in sandbox!
+            playCashRegisterSound();
             const addedAmt = parseFloat(sandboxAmt.value) || 0;
             currentTotal += addedAmt;
             if (sandboxTotalVal) {
