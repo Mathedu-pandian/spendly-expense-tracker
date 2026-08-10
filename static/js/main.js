@@ -31,9 +31,10 @@ document.addEventListener('DOMContentLoaded', function () {
 
     let currentChapter = 1;
     let isPlaying = true;
-    let playbackSpeed = 1.0;
-    let progressPercent = 25;
+    let playbackSpeed = 0.5; // Default to comfortable 0.5x pace
+    let progressPercent = 0;
     let timerInterval = null;
+    const TOTAL_DURATION_SEC = 120; // 2 Minutes total (30 sec per chapter)
 
     // ------------------------------------------------------------------ //
     // Open & Close Dialog Handlers                                        //
@@ -42,6 +43,8 @@ document.addEventListener('DOMContentLoaded', function () {
     openBtns.forEach(btn => {
         if (btn) {
             btn.addEventListener('click', () => {
+                progressPercent = 0;
+                setChapter(1);
                 modal.showModal();
                 startPlayback();
             });
@@ -74,7 +77,7 @@ document.addEventListener('DOMContentLoaded', function () {
     // Chapter Switching                                                  //
     // ------------------------------------------------------------------ //
 
-    function setChapter(chapterNum) {
+    function setChapter(chapterNum, setProgress = true) {
         currentChapter = parseInt(chapterNum, 10);
         
         chapterBtns.forEach(b => {
@@ -93,14 +96,16 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         });
 
-        // Update progress bar based on chapter
-        progressPercent = currentChapter * 25;
-        updatePlayerUI();
+        if (setProgress) {
+            progressPercent = (currentChapter - 1) * 25;
+            updatePlayerUI();
+        }
     }
 
     chapterBtns.forEach(btn => {
         btn.addEventListener('click', () => {
-            setChapter(btn.dataset.chapter);
+            stopPlayback(); // Pause auto-advance so user can read manually
+            setChapter(btn.dataset.chapter, true);
         });
     });
 
@@ -110,12 +115,14 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function updatePlayerUI() {
         if (progressBar) {
-            progressBar.style.width = progressPercent + '%';
+            progressBar.style.width = Math.min(100, Math.max(0, progressPercent)) + '%';
         }
         if (timeDisplay) {
-            const currentSec = Math.round((progressPercent / 100) * 60);
-            const formattedSec = currentSec < 10 ? '0' + currentSec : currentSec;
-            timeDisplay.textContent = `0:${formattedSec} / 1:00`;
+            const totalElapsedSec = Math.round((progressPercent / 100) * TOTAL_DURATION_SEC);
+            const minutes = Math.floor(totalElapsedSec / 60);
+            const seconds = totalElapsedSec % 60;
+            const formattedSec = seconds < 10 ? '0' + seconds : seconds;
+            timeDisplay.textContent = `${minutes}:${formattedSec} / 2:00`;
         }
     }
 
@@ -124,21 +131,29 @@ document.addEventListener('DOMContentLoaded', function () {
         isPlaying = true;
         if (playIcon) playIcon.textContent = '⏸';
 
+        // Updates smoothly every 200ms
         timerInterval = setInterval(() => {
             if (!isPlaying) return;
-            progressPercent += 1 * playbackSpeed;
-            if (progressPercent > 100) {
+
+            // Increment: 0.166% per 200ms at 1.0x = 100% in 120s
+            progressPercent += (0.166 * playbackSpeed);
+            
+            if (progressPercent >= 100) {
                 progressPercent = 0;
             }
-            
-            // Auto switch chapters as progress advances
-            if (progressPercent <= 25 && currentChapter !== 1) setChapter(1);
-            else if (progressPercent > 25 && progressPercent <= 50 && currentChapter !== 2) setChapter(2);
-            else if (progressPercent > 50 && progressPercent <= 75 && currentChapter !== 3) setChapter(3);
-            else if (progressPercent > 75 && currentChapter !== 4) setChapter(4);
+
+            // Sync current active chapter with timeline progress
+            let targetChapter = 1;
+            if (progressPercent > 75) targetChapter = 4;
+            else if (progressPercent > 50) targetChapter = 3;
+            else if (progressPercent > 25) targetChapter = 2;
+
+            if (targetChapter !== currentChapter) {
+                setChapter(targetChapter, false);
+            }
 
             updatePlayerUI();
-        }, 300);
+        }, 200);
     }
 
     function stopPlayback() {
@@ -158,17 +173,16 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     if (speedBtn) {
+        speedBtn.textContent = playbackSpeed + 'x';
         speedBtn.addEventListener('click', () => {
-            if (playbackSpeed === 1.0) {
-                playbackSpeed = 1.5;
-                speedBtn.textContent = '1.5x';
-            } else if (playbackSpeed === 1.5) {
-                playbackSpeed = 2.0;
-                speedBtn.textContent = '2.0x';
-            } else {
+            if (playbackSpeed === 0.5) {
                 playbackSpeed = 1.0;
-                speedBtn.textContent = '1.0x';
+            } else if (playbackSpeed === 1.0) {
+                playbackSpeed = 1.5;
+            } else {
+                playbackSpeed = 0.5;
             }
+            speedBtn.textContent = playbackSpeed + 'x';
         });
     }
 
@@ -178,11 +192,12 @@ document.addEventListener('DOMContentLoaded', function () {
             const clickX = e.clientX - rect.left;
             progressPercent = Math.min(100, Math.max(0, (clickX / rect.width) * 100));
             
-            if (progressPercent <= 25) setChapter(1);
-            else if (progressPercent <= 50) setChapter(2);
-            else if (progressPercent <= 75) setChapter(3);
-            else setChapter(4);
+            let targetChapter = 1;
+            if (progressPercent > 75) targetChapter = 4;
+            else if (progressPercent > 50) targetChapter = 3;
+            else if (progressPercent > 25) targetChapter = 2;
 
+            setChapter(targetChapter, false);
             updatePlayerUI();
         });
     }
@@ -192,8 +207,13 @@ document.addEventListener('DOMContentLoaded', function () {
     // ------------------------------------------------------------------ //
 
     let currentTotal = 12450;
+    if (sandboxAmt) {
+        sandboxAmt.addEventListener('focus', () => stopPlayback()); // Pause tour while user is testing
+    }
+
     if (sandboxAddBtn && sandboxAmt) {
         sandboxAddBtn.addEventListener('click', () => {
+            stopPlayback();
             const addedAmt = parseFloat(sandboxAmt.value) || 0;
             currentTotal += addedAmt;
             if (sandboxTotalVal) {
