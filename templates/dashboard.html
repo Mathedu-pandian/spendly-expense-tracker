@@ -10,7 +10,7 @@
         <div class="dashboard-header">
             <div>
                 <h1 class="dashboard-title">Welcome back, {{ g.user.name.split()[0] }}</h1>
-                <p class="dashboard-subtitle">7-Month Financial Analytics & Expense Management</p>
+                <p class="dashboard-subtitle">Financial Analytics, Category Visualizations & Expense Tracker</p>
             </div>
             <div class="dashboard-top-actions">
                 <a href="{{ url_for('profile') }}" class="btn-ghost">View Profile</a>
@@ -25,7 +25,7 @@
                 <div class="metric-info">
                     <span class="metric-label">
                         {% if selected_month != 'All' %}
-                            Spent in {{ selected_month }}
+                            Spent in {{ analytics_summary.month_label }}
                         {% else %}
                             Total Spent (7 Months)
                         {% endif %}
@@ -59,13 +59,13 @@
                     <h2 class="card-title">7-Month Monthly Analytics Trend</h2>
                     <p class="card-sub">Visual spending analysis across the past 7 months</p>
                 </div>
-                <span class="analytics-badge">📊 7 Months Active Data</span>
+                <span class="analytics-badge">📊 Monthly Timeline</span>
             </div>
 
             <div class="trends-bar-chart">
                 {% for m in monthly_trends %}
                 <a href="{{ url_for('dashboard', month=m.month_value, category=selected_category) }}"
-                   class="trend-column {% if selected_month == m.month_value %}active-column{% endif %}"
+                   class="trend-column {% if selected_month == m.month_value or (selected_month == 'All' and m.month_value == analytics_summary.target_month) %}active-column{% endif %}"
                    title="{{ m.month_label }}: ₹{{ '%.2f'|format(m.total) }} ({{ m.count }} expenses)">
                     
                     <div class="trend-bar-wrapper">
@@ -79,25 +79,120 @@
         </div>
         {% endif %}
 
-        <!-- Category Breakdown Visualization -->
-        {% if category_totals %}
-        <div class="dashboard-card category-card">
-            <h2 class="card-title">Category Spending Breakdown {% if selected_month != 'All' %}({{ selected_month }}){% endif %}</h2>
-            <div class="category-bars-list">
-                {% for cat in category_totals %}
-                <div class="category-bar-item">
-                    <div class="category-bar-head">
-                        <span class="cat-name-badge cat-{{ cat.category.lower() }}">{{ cat.category }}</span>
-                        <span class="cat-total-val">₹{{ "%.2f"|format(cat.total) }} ({{ cat.percentage }}%)</span>
+        <!-- Interactive Visual Analytics Row: Pie Chart & Spidergraph Radar Chart -->
+        <div class="analytics-charts-grid">
+            
+            <!-- Category Distribution SVG Pie / Donut Chart -->
+            <div class="dashboard-card chart-card">
+                <div class="card-header-flex">
+                    <div>
+                        <h2 class="card-title">Category Pie Chart</h2>
+                        <p class="card-sub">Expenditure distribution share</p>
                     </div>
-                    <div class="cat-bar-track">
-                        <div class="cat-bar-fill cat-fill-{{ cat.category.lower() }}" style="width: {{ cat.percentage }}%;"></div>
+                    <span class="analytics-badge" style="background: rgba(46, 204, 113, 0.15); color: #2ecc71;">🥧 Pie View</span>
+                </div>
+
+                <div class="pie-chart-container">
+                    {% if category_totals %}
+                    <div class="pie-chart-flex">
+                        <div class="pie-svg-wrapper">
+                            <svg id="category-pie-svg" viewBox="0 0 200 200" class="pie-svg">
+                                <!-- Rendered dynamically via JS script below -->
+                            </svg>
+                            <div class="pie-center-hole">
+                                <span class="pie-center-label">Total</span>
+                                <span class="pie-center-val">₹{{ "%.0f"|format(summary.total_spent) }}</span>
+                            </div>
+                        </div>
+
+                        <div class="pie-legend">
+                            {% for cat in category_totals %}
+                            <div class="legend-item" data-category="{{ cat.category }}">
+                                <span class="legend-dot cat-pill-{{ cat.category.lower() }}"></span>
+                                <span class="legend-name">{{ cat.category }}</span>
+                                <span class="legend-pct">{{ cat.percentage }}%</span>
+                                <span class="legend-amount">₹{{ "%.0f"|format(cat.total) }}</span>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% else %}
+                    <p class="empty-text">No category data to plot pie chart.</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Category Intensity Spidergraph (Radar Chart) -->
+            <div class="dashboard-card chart-card">
+                <div class="card-header-flex">
+                    <div>
+                        <h2 class="card-title">Category Spidergraph</h2>
+                        <p class="card-sub">Radar balance across 7 spending dimensions</p>
+                    </div>
+                    <span class="analytics-badge" style="background: rgba(155, 89, 182, 0.15); color: #9b59b6;">🕸️ Radar View</span>
+                </div>
+
+                <div class="radar-chart-container">
+                    <div class="radar-svg-wrapper">
+                        <svg id="spidergraph-svg" viewBox="0 0 300 300" class="radar-svg">
+                            <!-- Rendered dynamically via JS script below -->
+                        </svg>
                     </div>
                 </div>
-                {% endfor %}
+            </div>
+
+        </div>
+
+        <!-- End-of-Month Analytics Insights Summary -->
+        <div class="dashboard-card insights-card">
+            <div class="card-header-flex">
+                <div>
+                    <h2 class="card-title">End-of-Month Analytics Insights & Advisory</h2>
+                    <p class="card-sub">Automated monthly report based on {{ analytics_summary.month_label }} transactions</p>
+                </div>
+                <span class="analytics-badge" style="background: rgba(230, 126, 34, 0.15); color: #e67e22;">💡 Monthly Insights</span>
+            </div>
+
+            <div class="insights-content-grid">
+                
+                <div class="insight-stat-box">
+                    <span class="insight-stat-title">Month-over-Month (MoM)</span>
+                    <div class="insight-stat-value-group">
+                        <span class="insight-stat-val">₹{{ "%.2f"|format(analytics_summary.cur_total) }}</span>
+                        {% if analytics_summary.mom_direction == 'up' %}
+                        <span class="mom-badge mom-up">▲ +{{ analytics_summary.mom_pct }}% vs prev month</span>
+                        {% elif analytics_summary.mom_direction == 'down' %}
+                        <span class="mom-badge mom-down">▼ {{ analytics_summary.mom_pct }}% vs prev month</span>
+                        {% else %}
+                        <span class="mom-badge mom-neutral">— First month tracked</span>
+                        {% endif %}
+                    </div>
+                    <span class="insight-stat-sub">Previous Month: ₹{{ "%.2f"|format(analytics_summary.prev_total) }}</span>
+                </div>
+
+                <div class="insight-stat-box">
+                    <span class="insight-stat-title">Daily Average Spend</span>
+                    <span class="insight-stat-val">₹{{ "%.2f"|format(analytics_summary.daily_avg) }} / day</span>
+                    <span class="insight-stat-sub">Calculated over 30 days in {{ analytics_summary.month_label }}</span>
+                </div>
+
+                <div class="insight-stat-box">
+                    <span class="insight-stat-title">Primary Driver</span>
+                    <span class="insight-stat-val">{{ analytics_summary.top_cat }}</span>
+                    <span class="insight-stat-sub">₹{{ "%.2f"|format(analytics_summary.top_cat_amount) }} total expenditure</span>
+                </div>
+
+            </div>
+
+            <!-- Smart Financial Advisory Box -->
+            <div class="advisory-box">
+                <span class="advisory-icon">🤖</span>
+                <div class="advisory-text">
+                    <strong class="advisory-heading">Smart Monthly Advisory Report:</strong>
+                    <p class="advisory-body">{{ analytics_summary.advisory_tip }}</p>
+                </div>
             </div>
         </div>
-        {% endif %}
 
         <!-- Expense Records List & Filters -->
         <div class="dashboard-card records-card">
@@ -179,4 +274,10 @@
 
     </div>
 </section>
+
+<!-- Data JSON payloads for JavaScript Chart Generators -->
+<script>
+    window.SPENDLY_CATEGORY_DATA = {{ category_totals | tojson }};
+    window.SPENDLY_SPIDER_DATA = {{ analytics_summary.spider_nodes | tojson }};
+</script>
 {% endblock %}

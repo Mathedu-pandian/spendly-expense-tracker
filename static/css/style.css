@@ -1602,11 +1602,228 @@ a { color: inherit; text-decoration: none; }
 }
 
 /* ------------------------------------------------------------------ */
+/* Visual Analytics Grid: Pie Chart & Spidergraph                      */
+/* ------------------------------------------------------------------ */
+
+.analytics-charts-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+/* Pie Chart Container */
+
+.pie-chart-flex {
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    gap: 1rem;
+}
+
+.pie-svg-wrapper {
+    position: relative;
+    width: 180px;
+    height: 180px;
+}
+
+.pie-svg {
+    width: 100%;
+    height: 100%;
+    transform: rotate(-90deg);
+}
+
+.pie-slice {
+    transition: transform 0.2s, opacity 0.2s;
+    cursor: pointer;
+}
+
+.pie-slice:hover {
+    opacity: 0.85;
+    transform: scale(1.03);
+    transform-origin: center;
+}
+
+.pie-center-hole {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    pointer-events: none;
+}
+
+.pie-center-label {
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    color: var(--ink-muted);
+}
+
+.pie-center-val {
+    font-family: var(--font-display);
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--ink);
+}
+
+/* Legend */
+
+.pie-legend {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.8rem;
+}
+
+.legend-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    display: inline-block;
+}
+
+.legend-name { font-weight: 500; min-width: 90px; color: var(--ink); }
+.legend-pct { font-weight: 600; color: var(--ink-muted); width: 45px; text-align: right; }
+.legend-amount { font-family: monospace; font-size: 0.75rem; color: var(--ink-faint); margin-left: 0.5rem; }
+
+/* Spidergraph Radar Chart Container */
+
+.radar-chart-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.radar-svg-wrapper {
+    width: 250px;
+    height: 250px;
+}
+
+.radar-svg {
+    width: 100%;
+    height: 100%;
+}
+
+.radar-polygon {
+    transition: all 0.3s ease;
+}
+
+.radar-polygon:hover {
+    fill: rgba(193, 127, 36, 0.4);
+}
+
+/* ------------------------------------------------------------------ */
+/* Monthly Insights Summary Card                                      */
+/* ------------------------------------------------------------------ */
+
+.insights-card {
+    background: linear-gradient(135deg, #ffffff 0%, var(--paper-warm) 100%);
+    border: 1px solid var(--border);
+}
+
+.insights-content-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.25rem;
+    margin-bottom: 1.5rem;
+}
+
+.insight-stat-box {
+    background: rgba(255, 255, 255, 0.8);
+    border: 1px solid var(--border-soft);
+    border-radius: var(--radius-sm);
+    padding: 1.1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.insight-stat-title {
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--ink-muted);
+}
+
+.insight-stat-value-group {
+    display: flex;
+    align-items: baseline;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.insight-stat-val {
+    font-family: var(--font-display);
+    font-size: 1.35rem;
+    font-weight: 700;
+    color: var(--ink);
+}
+
+.mom-badge {
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 0.15rem 0.45rem;
+    border-radius: 4px;
+}
+
+.mom-up { background: #f8d7da; color: var(--danger); }
+.mom-down { background: #d4edda; color: #155724; }
+.mom-neutral { background: var(--paper-warm); color: var(--ink-muted); }
+
+.insight-stat-sub {
+    font-size: 0.78rem;
+    color: var(--ink-muted);
+}
+
+/* Smart Advisory Box */
+
+.advisory-box {
+    background: rgba(193, 127, 36, 0.08);
+    border: 1px solid rgba(193, 127, 36, 0.25);
+    border-radius: var(--radius-sm);
+    padding: 1.25rem;
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+}
+
+.advisory-icon {
+    font-size: 1.75rem;
+    line-height: 1;
+}
+
+.advisory-heading {
+    font-size: 0.9rem;
+    color: var(--accent);
+    display: block;
+    margin-bottom: 0.25rem;
+}
+
+.advisory-body {
+    font-size: 0.88rem;
+    color: var(--ink);
+    line-height: 1.45;
+    margin: 0;
+}
+
+/* ------------------------------------------------------------------ */
 /* Responsive                                                          */
 /* ------------------------------------------------------------------ */
 
 @media (max-width: 900px) {
     .metrics-grid { grid-template-columns: 1fr; }
+    .analytics-charts-grid { grid-template-columns: 1fr; }
+    .insights-content-grid { grid-template-columns: 1fr; }
     .dashboard-header { flex-direction: column; align-items: flex-start; gap: 1rem; }
     .filter-group { flex-direction: column; width: 100%; }
     .filter-select, .filter-input { width: 100%; }

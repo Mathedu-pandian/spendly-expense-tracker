@@ -250,6 +250,120 @@ def get_monthly_trends(user_id):
     return trends
 
 
+def get_monthly_analytics_summary(user_id, month=None):
+    """Generates monthly summary insights, MoM comparison, and spidergraph axis values."""
+    conn = get_db()
+    cursor = conn.cursor()
+
+    if not month or month == "All":
+        cursor.execute("SELECT strftime('%Y-%m', MAX(date)) AS latest_month FROM expenses WHERE user_id = ?", (user_id,))
+        row = cursor.fetchone()
+        target_month = row["latest_month"] if row and row["latest_month"] else "2026-08"
+    else:
+        target_month = month
+
+    month_names = {
+        "01": "January", "02": "February", "03": "March", "04": "April",
+        "05": "May", "06": "June", "07": "July", "08": "August",
+        "09": "September", "10": "October", "11": "November", "12": "December"
+    }
+
+    parts = target_month.split("-")
+    yr = int(parts[0]) if len(parts) == 2 else 2026
+    mo = int(parts[1]) if len(parts) == 2 else 8
+    month_label = f"{month_names.get(f'{mo:02d}', str(mo))} {yr}"
+
+    if mo == 1:
+        prev_yr, prev_mo = yr - 1, 12
+    else:
+        prev_yr, prev_mo = yr, mo - 1
+    prev_month_str = f"{prev_yr}-{prev_mo:02d}"
+
+    cursor.execute("""
+        SELECT SUM(amount) AS total, COUNT(*) AS count 
+        FROM expenses WHERE user_id = ? AND strftime('%Y-%m', date) = ?
+    """, (user_id, target_month))
+    cur_row = cursor.fetchone()
+    cur_total = cur_row["total"] or 0.0
+    cur_count = cur_row["count"] or 0
+
+    cursor.execute("""
+        SELECT SUM(amount) AS total 
+        FROM expenses WHERE user_id = ? AND strftime('%Y-%m', date) = ?
+    """, (user_id, prev_month_str))
+    prev_total = cursor.fetchone()["total"] or 0.0
+
+    if prev_total > 0:
+        mom_diff = cur_total - prev_total
+        mom_pct = round((mom_diff / prev_total) * 100, 1)
+        mom_direction = "up" if mom_diff >= 0 else "down"
+    else:
+        mom_diff = 0.0
+        mom_pct = 0.0
+        mom_direction = "neutral"
+
+    daily_avg = round(cur_total / 30.0, 2)
+
+    all_categories = ["Food", "Bills", "Transport", "Health", "Shopping", "Entertainment", "Other"]
+    cursor.execute("""
+        SELECT category, SUM(amount) AS total
+        FROM expenses WHERE user_id = ? AND strftime('%Y-%m', date) = ?
+        GROUP BY category
+    """, (user_id, target_month))
+    cat_rows = cursor.fetchall()
+    cat_map = {r["category"]: r["total"] for r in cat_rows}
+
+    top_cat = "None"
+    top_cat_amount = 0.0
+    if cat_map:
+        top_cat = max(cat_map, key=cat_map.get)
+        top_cat_amount = cat_map[top_cat]
+
+    max_cat_val = max(cat_map.values(), default=1.0) or 1.0
+    spider_nodes = []
+    for cat in all_categories:
+        amt = cat_map.get(cat, 0.0)
+        score = round((amt / max_cat_val) * 100, 1) if max_cat_val > 0 else 0
+        spider_nodes.append({
+            "category": cat,
+            "amount": amt,
+            "score": max(10, score)
+        })
+
+    if top_cat != "None":
+        pct_of_total = round((top_cat_amount / cur_total * 100), 1) if cur_total > 0 else 0
+        advisory_tip = f"In {month_label}, your highest expenditure was on **{top_cat}** totaling ₹{top_cat_amount:,.2f} ({pct_of_total}% of your monthly budget)."
+        if top_cat == "Food":
+            advisory_tip += " Cooking at home or planning meal prep could reduce food costs by up to 15% next month."
+        elif top_cat == "Bills":
+            advisory_tip += " Check utility usage and annual subscriptions to see if any dormant recurring plans can be cancelled."
+        elif top_cat == "Shopping":
+            advisory_tip += " Implementing a 48-hour pause before major non-essential purchases can help curb impulse spending."
+        elif top_cat == "Entertainment":
+            advisory_tip += " Look out for bundled event passes or weekend deals to optimize recreation spending."
+        else:
+            advisory_tip += " Setting category spending targets will keep your total monthly budget balanced."
+    else:
+        advisory_tip = f"No expenses logged for {month_label} yet."
+
+    conn.close()
+
+    return {
+        "month_label": month_label,
+        "target_month": target_month,
+        "cur_total": cur_total,
+        "cur_count": cur_count,
+        "prev_total": prev_total,
+        "mom_pct": mom_pct,
+        "mom_direction": mom_direction,
+        "daily_avg": daily_avg,
+        "top_cat": top_cat,
+        "top_cat_amount": top_cat_amount,
+        "spider_nodes": spider_nodes,
+        "advisory_tip": advisory_tip
+    }
+
+
 # ------------------------------------------------------------------ #
 # Synthetic 7-Month Data Seeder                                       #
 # ------------------------------------------------------------------ #

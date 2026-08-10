@@ -414,3 +414,182 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 });
+
+/* ------------------------------------------------------------------ */
+/* Interactive SVG Pie & Spidergraph Radar Chart Renderers            */
+/* ------------------------------------------------------------------ */
+
+document.addEventListener('DOMContentLoaded', () => {
+    
+    // -------------------------------------------------------------- //
+    // 1. Render Category SVG Pie / Donut Chart                        //
+    // -------------------------------------------------------------- //
+    
+    const pieSvg = document.getElementById('category-pie-svg');
+    const catData = window.SPENDLY_CATEGORY_DATA || [];
+
+    if (pieSvg && catData.length > 0) {
+        const cx = 100, cy = 100, rOuter = 82, rInner = 52;
+        let cumulativeAngle = -Math.PI / 2; // Start from top 12 o'clock
+
+        const catColors = {
+            'food': '#e67e22',
+            'bills': '#e74c3c',
+            'transport': '#3498db',
+            'health': '#2ecc71',
+            'shopping': '#9b59b6',
+            'entertainment': '#f1c40f',
+            'other': '#7f8c8d'
+        };
+
+        const grandTotal = catData.reduce((acc, c) => acc + c.total, 0);
+
+        catData.forEach((cat) => {
+            const portion = grandTotal > 0 ? (cat.total / grandTotal) : 0;
+            const sliceAngle = portion * 2 * Math.PI;
+
+            if (sliceAngle <= 0) return;
+
+            const startAngle = cumulativeAngle;
+            const endAngle = cumulativeAngle + sliceAngle;
+            cumulativeAngle = endAngle;
+
+            // Outer arc coordinates
+            const x1 = cx + rOuter * Math.cos(startAngle);
+            const y1 = cy + rOuter * Math.sin(startAngle);
+            const x2 = cx + rOuter * Math.cos(endAngle);
+            const y2 = cy + rOuter * Math.sin(endAngle);
+
+            // Inner hole coordinates
+            const x3 = cx + rInner * Math.cos(endAngle);
+            const y3 = cy + rInner * Math.sin(endAngle);
+            const x4 = cx + rInner * Math.cos(startAngle);
+            const y4 = cy + rInner * Math.sin(startAngle);
+
+            const largeArcFlag = sliceAngle > Math.PI ? 1 : 0;
+            const color = catColors[cat.category.toLowerCase()] || '#95a5a6';
+
+            // SVG Donut Path
+            const pathData = [
+                `M ${x1} ${y1}`,
+                `A ${rOuter} ${rOuter} 0 ${largeArcFlag} 1 ${x2} ${y2}`,
+                `L ${x3} ${y3}`,
+                `A ${rInner} ${rInner} 0 ${largeArcFlag} 0 ${x4} ${y4}`,
+                `Z`
+            ].join(' ');
+
+            const pathEl = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+            pathEl.setAttribute('d', pathData);
+            pathEl.setAttribute('fill', color);
+            pathEl.setAttribute('class', 'pie-slice');
+            pathEl.setAttribute('data-category', cat.category);
+
+            // Hover tooltip
+            const titleEl = document.createElementNS('http://www.w3.org/2000/svg', 'title');
+            titleEl.textContent = `${cat.category}: ₹${cat.total.toLocaleString()} (${cat.percentage}%)`;
+            pathEl.appendChild(titleEl);
+
+            pieSvg.appendChild(pathEl);
+        });
+    }
+
+    // -------------------------------------------------------------- //
+    // 2. Render 7-Axis Category Spidergraph (Radar Chart)             //
+    // -------------------------------------------------------------- //
+
+    const spiderSvg = document.getElementById('spidergraph-svg');
+    const spiderData = window.SPENDLY_SPIDER_DATA || [];
+
+    if (spiderSvg && spiderData.length > 0) {
+        const cx = 150, cy = 150, maxR = 95;
+        const totalAxes = spiderData.length;
+        const angleStep = (2 * Math.PI) / totalAxes;
+
+        // Draw 5 Concentric Polygon Web Grids (20%, 40%, 60%, 80%, 100%)
+        const gridLevels = [0.2, 0.4, 0.6, 0.8, 1.0];
+        gridLevels.forEach((level) => {
+            const points = [];
+            for (let i = 0; i < totalAxes; i++) {
+                const angle = i * angleStep - Math.PI / 2;
+                const r = maxR * level;
+                const x = cx + r * Math.cos(angle);
+                const y = cy + r * Math.sin(angle);
+                points.push(`${x},${y}`);
+            }
+            const gridPoly = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+            gridPoly.setAttribute('points', points.join(' '));
+            gridPoly.setAttribute('fill', 'none');
+            gridPoly.setAttribute('stroke', level === 1.0 ? 'rgba(0,0,0,0.15)' : 'rgba(0,0,0,0.06)');
+            gridPoly.setAttribute('stroke-width', '1');
+            spiderSvg.appendChild(gridPoly);
+        });
+
+        // Draw Radial Axis Lines and Category Labels
+        const dataPoints = [];
+        spiderData.forEach((node, i) => {
+            const angle = i * angleStep - Math.PI / 2;
+
+            // Axis Line
+            const ax = cx + maxR * Math.cos(angle);
+            const ay = cy + maxR * Math.sin(angle);
+            const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+            line.setAttribute('x1', cx);
+            line.setAttribute('y1', cy);
+            line.setAttribute('x2', ax);
+            line.setAttribute('y2', ay);
+            line.setAttribute('stroke', 'rgba(0,0,0,0.08)');
+            line.setAttribute('stroke-width', '1');
+            spiderSvg.appendChild(line);
+
+            // Calculate Data Point Position (score 0–100)
+            const scoreR = maxR * (node.score / 100);
+            const dx = cx + scoreR * Math.cos(angle);
+            const dy = cy + scoreR * Math.sin(angle);
+            dataPoints.push({ x: dx, y: dy, node: node });
+
+            // Category Label Position (placed outside maxR)
+            const labelR = maxR + 20;
+            const lx = cx + labelR * Math.cos(angle);
+            const ly = cy + labelR * Math.sin(angle);
+
+            const textEl = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+            textEl.setAttribute('x', lx);
+            textEl.setAttribute('y', ly);
+            textEl.setAttribute('text-anchor', 'middle');
+            textEl.setAttribute('dominant-baseline', 'middle');
+            textEl.setAttribute('font-size', '10.5');
+            textEl.setAttribute('font-weight', '600');
+            textEl.setAttribute('fill', 'var(--ink-muted)');
+            textEl.textContent = node.category;
+            spiderSvg.appendChild(textEl);
+        });
+
+        // Draw Filled Radar Polygon Area
+        const polygonPoints = dataPoints.map(p => `${p.x},${p.y}`).join(' ');
+        const radarPoly = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+        radarPoly.setAttribute('points', polygonPoints);
+        radarPoly.setAttribute('fill', 'rgba(193, 127, 36, 0.25)');
+        radarPoly.setAttribute('stroke', 'var(--accent)');
+        radarPoly.setAttribute('stroke-width', '2');
+        radarPoly.setAttribute('class', 'radar-polygon');
+        spiderSvg.appendChild(radarPoly);
+
+        // Draw Data Point Dots & Hover Tooltips
+        dataPoints.forEach((p) => {
+            const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+            circle.setAttribute('cx', p.x);
+            circle.setAttribute('cy', p.y);
+            circle.setAttribute('r', '4');
+            circle.setAttribute('fill', 'var(--accent)');
+            circle.setAttribute('stroke', '#ffffff');
+            circle.setAttribute('stroke-width', '1.5');
+            
+            const title = document.createElementNS('http://www.w3.org/2000/svg', 'title');
+            title.textContent = `${p.node.category}: ₹${p.node.amount.toLocaleString()} (Intensity: ${p.node.score}%)`;
+            circle.appendChild(title);
+
+            spiderSvg.appendChild(circle);
+        });
+    }
+
+});
