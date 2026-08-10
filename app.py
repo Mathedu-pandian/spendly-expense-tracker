@@ -5,7 +5,8 @@ from flask import Flask, render_template, request, redirect, url_for, session, g
 from werkzeug.security import check_password_hash
 from database.db import (
     init_db, seed_db, create_user, get_user_by_email, get_user_by_id,
-    get_user_expenses, get_expense_summary, get_category_totals, add_expense_db
+    get_user_expenses, get_expense_summary, get_category_totals, add_expense_db,
+    get_available_months, get_monthly_trends
 )
 
 app = Flask(__name__)
@@ -125,18 +126,24 @@ def privacy():
 @app.route("/dashboard")
 @login_required
 def dashboard():
+    selected_month = request.args.get("month", "All")
     category_filter = request.args.get("category", "All")
     search_query = request.args.get("search", "").strip()
 
-    expenses = get_user_expenses(g.user["id"], category=category_filter, search=search_query)
-    summary = get_expense_summary(g.user["id"])
-    category_totals = get_category_totals(g.user["id"])
+    expenses = get_user_expenses(g.user["id"], month=selected_month, category=category_filter, search=search_query)
+    summary = get_expense_summary(g.user["id"], month=selected_month)
+    category_totals = get_category_totals(g.user["id"], month=selected_month)
+    available_months = get_available_months(g.user["id"])
+    monthly_trends = get_monthly_trends(g.user["id"])
 
     return render_template(
         "dashboard.html",
         expenses=expenses,
         summary=summary,
         category_totals=category_totals,
+        available_months=available_months,
+        monthly_trends=monthly_trends,
+        selected_month=selected_month,
         selected_category=category_filter,
         selected_search=search_query
     )
