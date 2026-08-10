@@ -19,8 +19,16 @@
                 <span class="brand-name">Spendly</span>
             </a>
             <div class="nav-links">
-                <a href="{{ url_for('login') }}">Sign in</a>
-                <a href="{{ url_for('register') }}" class="nav-cta">Get started</a>
+                {% if g.user %}
+                    <a href="{{ url_for('profile') }}" class="nav-user">
+                        <span class="user-avatar">{{ g.user.name[0] | upper }}</span>
+                        <span class="user-name">{{ g.user.name }}</span>
+                    </a>
+                    <a href="{{ url_for('logout') }}" class="nav-logout">Sign out</a>
+                {% else %}
+                    <a href="{{ url_for('login') }}">Sign in</a>
+                    <a href="{{ url_for('register') }}" class="nav-cta">Get started</a>
+                {% endif %}
             </div>
         </div>
     </nav>
