@@ -1,4 +1,4 @@
-// main.js — Interactive Video Modal, Sound Effects & Hans Zimmer Cornfield Chase Audio Engine
+// main.js — Interactive Video Modal & Hans Zimmer Cornfield Chase Audio Engine
 
 document.addEventListener('DOMContentLoaded', function () {
     const modal = document.getElementById('video-modal');
@@ -36,15 +36,18 @@ document.addEventListener('DOMContentLoaded', function () {
     let progressPercent = 0;
     let timerInterval = null;
     let typeTimer = null;
-    let isMuted = false;
     let isMusicEnabled = true;
     const TOTAL_DURATION_SEC = 20; // 20 Seconds total (5 seconds per chapter)
 
     // ------------------------------------------------------------------ //
-    // Web Audio API — Real-time Sound Effects & Cornfield Chase Engine   //
+    // Web Audio API — Hans Zimmer Cornfield Chase Synthesizer Engine     //
     // ------------------------------------------------------------------ //
 
     let audioCtx = null;
+    let musicPlaying = false;
+    let musicInterval = null;
+    let organFilter = null;
+    let masterGain = null;
 
     function getAudioContext() {
         if (!audioCtx) {
@@ -56,101 +59,15 @@ document.addEventListener('DOMContentLoaded', function () {
         return audioCtx;
     }
 
-    // Metallic Coin Clink Sound Effect
-    function playCoinSound() {
-        if (isMuted) return;
-        try {
-            const ctx = getAudioContext();
-            const now = ctx.currentTime;
-
-            const osc1 = ctx.createOscillator();
-            const osc2 = ctx.createOscillator();
-            const gain = ctx.createGain();
-
-            osc1.type = 'sine';
-            osc2.type = 'sine';
-
-            osc1.frequency.setValueAtTime(1600, now);
-            osc1.frequency.exponentialRampToValueAtTime(3400, now + 0.06);
-
-            osc2.frequency.setValueAtTime(2400, now);
-            osc2.frequency.exponentialRampToValueAtTime(4800, now + 0.06);
-
-            gain.gain.setValueAtTime(0.25, now);
-            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
-
-            osc1.connect(gain);
-            osc2.connect(gain);
-            gain.connect(ctx.destination);
-
-            osc1.start(now);
-            osc2.start(now);
-            osc1.stop(now + 0.2);
-            osc2.stop(now + 0.2);
-        } catch (e) {}
-    }
-
-    // Classic Cash Register Ka-Ching Sound Effect
-    function playCashRegisterSound() {
-        if (isMuted) return;
-        try {
-            const ctx = getAudioContext();
-            const now = ctx.currentTime;
-
-            const clickOsc = ctx.createOscillator();
-            const clickGain = ctx.createGain();
-            clickOsc.type = 'square';
-            clickOsc.frequency.setValueAtTime(280, now);
-            clickGain.gain.setValueAtTime(0.2, now);
-            clickGain.gain.exponentialRampToValueAtTime(0.001, now + 0.035);
-            clickOsc.connect(clickGain);
-            clickGain.connect(ctx.destination);
-            clickOsc.start(now);
-            clickOsc.stop(now + 0.035);
-
-            const chime1 = ctx.createOscillator();
-            const chime2 = ctx.createOscillator();
-            const chimeGain = ctx.createGain();
-
-            chime1.type = 'sine';
-            chime2.type = 'sine';
-
-            chime1.frequency.setValueAtTime(1800, now + 0.035);
-            chime2.frequency.setValueAtTime(2700, now + 0.035);
-
-            chimeGain.gain.setValueAtTime(0, now);
-            chimeGain.gain.setValueAtTime(0.3, now + 0.035);
-            chimeGain.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
-
-            chime1.connect(chimeGain);
-            chime2.connect(chimeGain);
-            chimeGain.connect(ctx.destination);
-
-            chime1.start(now + 0.035);
-            chime2.start(now + 0.035);
-            chime1.stop(now + 0.4);
-            chime2.stop(now + 0.4);
-        } catch (e) {}
-    }
-
-    // ------------------------------------------------------------------ //
-    // Hans Zimmer — Cornfield Chase Synthesizer Engine                   //
-    // ------------------------------------------------------------------ //
-
-    let musicPlaying = false;
-    let musicInterval = null;
-    let organFilter = null;
-    let masterGain = null;
-
     // Cornfield Chase Arpeggios (Am - F - C - G)
     const CHORDS = [
-        { name: 'Am', bass: 110.0, notes: [220.0, 329.63, 440.0, 523.25, 659.25, 880.0, 1046.5] },
-        { name: 'F',  bass: 87.31, notes: [174.61, 261.63, 349.23, 440.0, 523.25, 698.46, 880.0] },
-        { name: 'C',  bass: 130.81, notes: [261.63, 392.00, 523.25, 659.25, 783.99, 1046.5, 1318.5] },
-        { name: 'G',  bass: 98.00, notes: [196.00, 293.66, 392.00, 493.88, 587.33, 783.99, 987.77] }
+        { name: 'Am', bass: 110.0, notes: [220.0, 329.63, 440.0, 523.25, 659.25, 880.0] },
+        { name: 'F',  bass: 87.31, notes: [174.61, 261.63, 349.23, 440.0, 523.25, 698.46] },
+        { name: 'C',  bass: 130.81, notes: [261.63, 392.00, 523.25, 659.25, 783.99, 1046.5] },
+        { name: 'G',  bass: 98.00, notes: [196.00, 293.66, 392.00, 493.88, 587.33, 783.99] }
     ];
 
-    function playOrganNote(freq, duration, gainVal = 0.1) {
+    function playOrganNote(freq, duration, gainVal = 0.08) {
         if (!isMusicEnabled || !musicPlaying) return;
         try {
             const ctx = getAudioContext();
@@ -160,13 +77,14 @@ document.addEventListener('DOMContentLoaded', function () {
             const osc2 = ctx.createOscillator();
             const noteGain = ctx.createGain();
 
-            osc1.type = 'triangle'; // Organ pipe warmth
-            osc2.type = 'sine';     // Octave overtone
+            osc1.type = 'triangle'; // Warm pipe organ timbre
+            osc2.type = 'sine';     // Subdued octave overtone
 
             osc1.frequency.setValueAtTime(freq, now);
             osc2.frequency.setValueAtTime(freq * 2, now);
 
-            noteGain.gain.setValueAtTime(gainVal, now);
+            noteGain.gain.setValueAtTime(0.001, now);
+            noteGain.gain.exponentialRampToValueAtTime(gainVal, now + 0.05);
             noteGain.gain.exponentialRampToValueAtTime(0.001, now + duration);
 
             osc1.connect(noteGain);
@@ -193,10 +111,11 @@ document.addEventListener('DOMContentLoaded', function () {
             const ctx = getAudioContext();
             const now = ctx.currentTime;
 
+            // Warm organ low-pass filter with gentle crescendo
             organFilter = ctx.createBiquadFilter();
             organFilter.type = 'lowpass';
-            organFilter.frequency.setValueAtTime(700, now);
-            organFilter.frequency.linearRampToValueAtTime(2800, now + 15);
+            organFilter.frequency.setValueAtTime(600, now);
+            organFilter.frequency.linearRampToValueAtTime(2000, now + 15);
 
             masterGain = ctx.createGain();
             masterGain.gain.setValueAtTime(0.2, now);
@@ -208,28 +127,29 @@ document.addEventListener('DOMContentLoaded', function () {
             let chordIdx = 0;
             let tickCount = 0;
 
-            // Hans Zimmer rapid 12/8 organ tempo (110ms per note)
+            // Slower, majestic tempo (230ms per arpeggio note)
             musicInterval = setInterval(() => {
                 if (!musicPlaying || !isMusicEnabled) return;
                 
                 const currentChord = CHORDS[chordIdx];
                 const freq = currentChord.notes[noteIdx % currentChord.notes.length];
                 
-                playOrganNote(freq, 0.3, 0.08);
+                // Play sustained warm organ note (0.5s duration)
+                playOrganNote(freq, 0.5, 0.07);
 
-                // Sub-bass organ pedal every 8 ticks
-                if (noteIdx % 8 === 0) {
-                    playOrganNote(currentChord.bass, 1.0, 0.18);
+                // Warm bass pedal every 6 ticks
+                if (noteIdx % 6 === 0) {
+                    playOrganNote(currentChord.bass, 1.4, 0.15);
                 }
 
                 noteIdx++;
                 tickCount++;
 
-                if (tickCount % 16 === 0) {
+                if (tickCount % 12 === 0) {
                     chordIdx = (chordIdx + 1) % CHORDS.length;
                     noteIdx = 0;
                 }
-            }, 110);
+            }, 230);
 
         } catch (e) {}
     }
@@ -288,11 +208,10 @@ document.addEventListener('DOMContentLoaded', function () {
         if (btn) {
             btn.addEventListener('click', () => {
                 progressPercent = 0;
-                setChapter(1, true, false);
+                setChapter(1, true);
                 modal.showModal();
                 startPlayback();
                 if (isMusicEnabled) startCornfieldChaseEngine();
-                playCoinSound();
             });
         }
     });
@@ -322,11 +241,10 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     // ------------------------------------------------------------------ //
-    // Chapter Switching & Sound Triggers                                 //
+    // Chapter Switching                                                  //
     // ------------------------------------------------------------------ //
 
-    function setChapter(chapterNum, setProgress = true, playSound = true) {
-        const prevChapter = currentChapter;
+    function setChapter(chapterNum, setProgress = true) {
         currentChapter = parseInt(chapterNum, 10);
         
         chapterBtns.forEach(b => {
@@ -349,14 +267,6 @@ document.addEventListener('DOMContentLoaded', function () {
             playSlide1Animation();
         }
 
-        if (playSound && prevChapter !== currentChapter) {
-            if (currentChapter === 2 || currentChapter === 4) {
-                playCashRegisterSound();
-            } else {
-                playCoinSound();
-            }
-        }
-
         if (setProgress) {
             progressPercent = (currentChapter - 1) * 25;
             updatePlayerUI();
@@ -366,7 +276,7 @@ document.addEventListener('DOMContentLoaded', function () {
     chapterBtns.forEach(btn => {
         btn.addEventListener('click', () => {
             stopPlayback();
-            setChapter(btn.dataset.chapter, true, true);
+            setChapter(btn.dataset.chapter, true);
         });
     });
 
@@ -410,7 +320,7 @@ document.addEventListener('DOMContentLoaded', function () {
             else if (progressPercent > 25) targetChapter = 2;
 
             if (targetChapter !== currentChapter) {
-                setChapter(targetChapter, false, true);
+                setChapter(targetChapter, false);
             }
 
             updatePlayerUI();
@@ -475,7 +385,7 @@ document.addEventListener('DOMContentLoaded', function () {
             else if (progressPercent > 50) targetChapter = 3;
             else if (progressPercent > 25) targetChapter = 2;
 
-            setChapter(targetChapter, false, true);
+            setChapter(targetChapter, false);
             updatePlayerUI();
         });
     }
@@ -492,7 +402,6 @@ document.addEventListener('DOMContentLoaded', function () {
     if (sandboxAddBtn && sandboxAmt) {
         sandboxAddBtn.addEventListener('click', () => {
             stopPlayback();
-            playCashRegisterSound();
             const addedAmt = parseFloat(sandboxAmt.value) || 0;
             currentTotal += addedAmt;
             if (sandboxTotalVal) {
