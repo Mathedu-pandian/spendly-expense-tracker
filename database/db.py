@@ -26,9 +26,6 @@ def create_user(name, email, password):
         )
         conn.commit()
         user_id = cursor.lastrowid
-        
-        # Seed 7 months of synthetic data for the new user so analytics work immediately
-        seed_synthetic_7_months(user_id)
         return user_id
     except sqlite3.IntegrityError:
         return None
@@ -367,32 +364,25 @@ def init_db():
 
 
 def seed_db():
-    """Seeds initial demo user and 7 months of sample synthetic expenses."""
+    """Seeds initial demo user and 7 months of sample synthetic expenses strictly for Demo User."""
     conn = get_db()
     cursor = conn.cursor()
 
-    cursor.execute("SELECT COUNT(*) FROM users")
-    user_count = cursor.fetchone()[0]
+    cursor.execute("SELECT id FROM users WHERE LOWER(email) = 'demo@spendly.com'")
+    demo_user = cursor.fetchone()
 
-    if user_count == 0:
+    if demo_user is None:
         demo_password_hash = generate_password_hash("demo123")
         cursor.execute(
             "INSERT INTO users (name, email, password_hash) VALUES (?, ?, ?)",
             ("Demo User", "demo@spendly.com", demo_password_hash)
         )
-        user_id = cursor.lastrowid
+        conn.commit()
+        demo_user_id = cursor.lastrowid
     else:
-        cursor.execute("SELECT id FROM users ORDER BY id ASC LIMIT 1")
-        user_id = cursor.fetchone()[0]
+        demo_user_id = demo_user["id"]
 
     conn.close()
 
-    # Ensure synthetic 7-month data is seeded for users
-    conn2 = get_db()
-    cursor2 = conn2.cursor()
-    cursor2.execute("SELECT id FROM users")
-    users = cursor2.fetchall()
-    conn2.close()
-
-    for u in users:
-        seed_synthetic_7_months(u["id"])
+    # Seed 7 months of synthetic data strictly for Demo User
+    seed_synthetic_7_months(demo_user_id)
