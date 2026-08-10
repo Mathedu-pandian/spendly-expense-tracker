@@ -1,10 +1,11 @@
 import os
+from datetime import date as dt_date
 from functools import wraps
 from flask import Flask, render_template, request, redirect, url_for, session, g, flash
 from werkzeug.security import check_password_hash
 from database.db import (
     init_db, seed_db, create_user, get_user_by_email, get_user_by_id,
-    get_user_expenses, get_expense_summary, get_category_totals
+    get_user_expenses, get_expense_summary, get_category_totals, add_expense_db
 )
 
 app = Flask(__name__)
@@ -147,15 +148,34 @@ def profile():
     return render_template("profile.html")
 
 
+@app.route("/expenses/add", methods=["GET", "POST"])
+@login_required
+def add_expense():
+    if request.method == "POST":
+        try:
+            amount = float(request.form.get("amount", 0))
+        except ValueError:
+            amount = 0.0
+
+        category = request.form.get("category", "Other").strip()
+        expense_date = request.form.get("date", "").strip()
+        description = request.form.get("description", "").strip()
+
+        if amount <= 0:
+            return render_template("add_expense.html", error="Please enter a valid positive amount.", today_date=dt_date.today().isoformat())
+
+        if not expense_date:
+            expense_date = dt_date.today().isoformat()
+
+        add_expense_db(g.user["id"], amount, category, expense_date, description)
+        return redirect(url_for("dashboard"))
+
+    return render_template("add_expense.html", today_date=dt_date.today().isoformat())
+
+
 # ------------------------------------------------------------------ #
 # Placeholder routes — upcoming steps                                #
 # ------------------------------------------------------------------ #
-
-@app.route("/expenses/add")
-@login_required
-def add_expense():
-    return "Add expense — coming in Step 7"
-
 
 @app.route("/expenses/<int:id>/edit")
 @login_required
