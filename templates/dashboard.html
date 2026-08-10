@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Expense Dashboard — Spendly{% endblock %}
+{% block title %}Expense Dashboard & Analytics — Spendly{% endblock %}
 
 {% block content %}
 <section class="dashboard-section">
@@ -10,7 +10,7 @@
         <div class="dashboard-header">
             <div>
                 <h1 class="dashboard-title">Welcome back, {{ g.user.name.split()[0] }}</h1>
-                <p class="dashboard-subtitle">Here is your personal financial overview</p>
+                <p class="dashboard-subtitle">7-Month Financial Analytics & Expense Management</p>
             </div>
             <div class="dashboard-top-actions">
                 <a href="{{ url_for('profile') }}" class="btn-ghost">View Profile</a>
@@ -23,7 +23,13 @@
             <div class="metric-card">
                 <span class="metric-icon">💳</span>
                 <div class="metric-info">
-                    <span class="metric-label">Total Spent</span>
+                    <span class="metric-label">
+                        {% if selected_month != 'All' %}
+                            Spent in {{ selected_month }}
+                        {% else %}
+                            Total Spent (7 Months)
+                        {% endif %}
+                    </span>
                     <span class="metric-value">₹{{ "%.2f"|format(summary.total_spent) }}</span>
                 </div>
             </div>
@@ -31,8 +37,8 @@
             <div class="metric-card">
                 <span class="metric-icon">📝</span>
                 <div class="metric-info">
-                    <span class="metric-label">Total Transactions</span>
-                    <span class="metric-value">{{ summary.total_count }}</span>
+                    <span class="metric-label">Transactions</span>
+                    <span class="metric-value">{{ summary.total_count }} Records</span>
                 </div>
             </div>
 
@@ -45,10 +51,38 @@
             </div>
         </div>
 
+        <!-- 7-Month Analytics Trend Bar Chart -->
+        {% if monthly_trends %}
+        <div class="dashboard-card trends-card">
+            <div class="card-header-flex">
+                <div>
+                    <h2 class="card-title">7-Month Monthly Analytics Trend</h2>
+                    <p class="card-sub">Visual spending analysis across the past 7 months</p>
+                </div>
+                <span class="analytics-badge">📊 7 Months Active Data</span>
+            </div>
+
+            <div class="trends-bar-chart">
+                {% for m in monthly_trends %}
+                <a href="{{ url_for('dashboard', month=m.month_value, category=selected_category) }}"
+                   class="trend-column {% if selected_month == m.month_value %}active-column{% endif %}"
+                   title="{{ m.month_label }}: ₹{{ '%.2f'|format(m.total) }} ({{ m.count }} expenses)">
+                    
+                    <div class="trend-bar-wrapper">
+                        <span class="trend-amount-tooltip">₹{{ "%.0f"|format(m.total) }}</span>
+                        <div class="trend-bar-fill" style="height: {{ m.height_pct }}%;"></div>
+                    </div>
+                    <span class="trend-month-label">{{ m.month_label }}</span>
+                </a>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
         <!-- Category Breakdown Visualization -->
         {% if category_totals %}
         <div class="dashboard-card category-card">
-            <h2 class="card-title">Category Spending Breakdown</h2>
+            <h2 class="card-title">Category Spending Breakdown {% if selected_month != 'All' %}({{ selected_month }}){% endif %}</h2>
             <div class="category-bars-list">
                 {% for cat in category_totals %}
                 <div class="category-bar-item">
@@ -68,13 +102,22 @@
         <!-- Expense Records List & Filters -->
         <div class="dashboard-card records-card">
             <div class="records-header">
-                <h2 class="card-title">Recent Expenses</h2>
+                <h2 class="card-title">Expense Transactions</h2>
                 
                 <form method="GET" action="{{ url_for('dashboard') }}" class="filter-form">
                     <div class="filter-group">
-                        <input type="text" name="search" value="{{ selected_search }}" placeholder="Search description..." class="form-input filter-input">
+                        
+                        <!-- Month Filter Dropdown -->
+                        <select name="month" class="form-input filter-select" onchange="this.form.submit()">
+                            <option value="All" {% if selected_month == 'All' %}selected{% endif %}>📅 All 7 Months</option>
+                            {% for m in available_months %}
+                            <option value="{{ m.value }}" {% if selected_month == m.value %}selected{% endif %}>{{ m.label }}</option>
+                            {% endfor %}
+                        </select>
+
+                        <!-- Category Filter Dropdown -->
                         <select name="category" class="form-input filter-select" onchange="this.form.submit()">
-                            <option value="All" {% if selected_category == 'All' %}selected{% endif %}>All Categories</option>
+                            <option value="All" {% if selected_category == 'All' %}selected{% endif %}>🏷️ All Categories</option>
                             <option value="Food" {% if selected_category == 'Food' %}selected{% endif %}>Food</option>
                             <option value="Bills" {% if selected_category == 'Bills' %}selected{% endif %}>Bills</option>
                             <option value="Transport" {% if selected_category == 'Transport' %}selected{% endif %}>Transport</option>
@@ -83,8 +126,12 @@
                             <option value="Entertainment" {% if selected_category == 'Entertainment' %}selected{% endif %}>Entertainment</option>
                             <option value="Other" {% if selected_category == 'Other' %}selected{% endif %}>Other</option>
                         </select>
-                        <button type="submit" class="btn-ghost filter-btn">Search</button>
-                        {% if selected_category != 'All' or selected_search %}
+
+                        <!-- Search Input -->
+                        <input type="text" name="search" value="{{ selected_search }}" placeholder="Search note..." class="form-input filter-input">
+                        <button type="submit" class="btn-ghost filter-btn">Filter</button>
+                        
+                        {% if selected_month != 'All' or selected_category != 'All' or selected_search %}
                         <a href="{{ url_for('dashboard') }}" class="btn-ghost clear-filter-btn">Reset</a>
                         {% endif %}
                     </div>
@@ -124,8 +171,8 @@
             {% else %}
             <div class="empty-state">
                 <span class="empty-icon">📊</span>
-                <p class="empty-text">No expenses found matching your criteria.</p>
-                <a href="{{ url_for('add_expense') }}" class="btn-primary">+ Add Your First Expense</a>
+                <p class="empty-text">No expense records found matching your selected month or criteria.</p>
+                <a href="{{ url_for('add_expense') }}" class="btn-primary">+ Add New Expense</a>
             </div>
             {% endif %}
         </div>

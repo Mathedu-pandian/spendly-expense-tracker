@@ -1502,6 +1502,105 @@ a { color: inherit; text-decoration: none; }
     font-weight: 600;
 }
 
+/* 7-Month Analytics Trend Bar Chart */
+
+.card-header-flex {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+
+.card-sub {
+    font-size: 0.85rem;
+    color: var(--ink-muted);
+    margin-top: -0.85rem;
+    margin-bottom: 0.5rem;
+}
+
+.analytics-badge {
+    background: var(--accent-light);
+    color: var(--accent);
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 0.35rem 0.75rem;
+    border-radius: 999px;
+}
+
+.trends-bar-chart {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    height: 180px;
+    padding: 1.5rem 0.5rem 0.5rem;
+    background: var(--paper-warm);
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-soft);
+}
+
+.trend-column {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    height: 100%;
+    text-decoration: none;
+    transition: opacity 0.2s;
+}
+
+.trend-column:hover {
+    opacity: 0.85;
+}
+
+.trend-bar-wrapper {
+    flex: 1;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    align-items: center;
+    position: relative;
+}
+
+.trend-amount-tooltip {
+    position: absolute;
+    top: -24px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: var(--ink);
+    opacity: 0;
+    transition: opacity 0.2s;
+    white-space: nowrap;
+}
+
+.trend-column:hover .trend-amount-tooltip {
+    opacity: 1;
+}
+
+.trend-bar-fill {
+    width: 60%;
+    max-width: 36px;
+    background: var(--accent-2);
+    border-radius: 4px 4px 0 0;
+    transition: height 0.4s ease, background 0.2s;
+}
+
+.trend-column.active-column .trend-bar-fill {
+    background: var(--accent);
+}
+
+.trend-month-label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--ink-muted);
+    margin-top: 0.5rem;
+}
+
+.trend-column.active-column .trend-month-label {
+    color: var(--accent);
+    font-weight: 700;
+}
+
 /* ------------------------------------------------------------------ */
 /* Responsive                                                          */
 /* ------------------------------------------------------------------ */
