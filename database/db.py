@@ -53,6 +53,20 @@ def get_user_by_id(user_id):
     return user
 
 
+def add_expense_db(user_id, amount, category, date, description):
+    """Inserts a new expense record into the SQLite database."""
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute(
+        "INSERT INTO expenses (user_id, amount, category, date, description) VALUES (?, ?, ?, ?, ?)",
+        (user_id, amount, category, date, description)
+    )
+    conn.commit()
+    expense_id = cursor.lastrowid
+    conn.close()
+    return expense_id
+
+
 def get_user_expenses(user_id, category=None, search=None):
     """Fetches all expenses for a user with optional category filter and keyword search."""
     conn = get_db()
