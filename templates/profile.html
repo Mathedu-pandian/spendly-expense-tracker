@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{% block title %}User Profile — Spendly{% endblock %}
+
+{% block content %}
+<section class="auth-section">
+    <div class="auth-container" style="max-width: 540px;">
+
+        <div class="auth-header">
+            <h1 class="auth-title">User Profile</h1>
+            <p class="auth-subtitle">Manage your Spendly account details</p>
+        </div>
+
+        <div class="auth-card" style="padding: 2.5rem;">
+            <div class="profile-avatar-large">
+                {{ g.user.name[0] | upper }}
+            </div>
+            
+            <div class="profile-details">
+                <div class="profile-field">
+                    <span class="profile-label">Full Name</span>
+                    <span class="profile-value">{{ g.user.name }}</span>
+                </div>
+                <div class="profile-field">
+                    <span class="profile-label">Email Address</span>
+                    <span class="profile-value">{{ g.user.email }}</span>
+                </div>
+                <div class="profile-field">
+                    <span class="profile-label">Account Created</span>
+                    <span class="profile-value">{{ g.user.created_at }}</span>
+                </div>
+            </div>
+
+            <div class="profile-actions">
+                <a href="{{ url_for('logout') }}" class="btn-ghost" style="width: 100%; text-align: center; color: var(--danger); border-color: #f5c6c2;">Sign out</a>
+            </div>
+        </div>
+
+    </div>
+</section>
+{% endblock %}
