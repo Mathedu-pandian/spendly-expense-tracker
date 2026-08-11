@@ -507,6 +507,142 @@ def get_inter_category_stats(user_id):
 
 
 # ------------------------------------------------------------------ #
+# Monthly Budget Planning & 50%/75% Threshold Alert Engine            #
+# ------------------------------------------------------------------ #
+
+DEFAULT_BUDGET_LIMITS = {
+    "Food": 8000.0,
+    "Bills": 15000.0,
+    "Transport": 3000.0,
+    "Health": 2500.0,
+    "Shopping": 5000.0,
+    "Entertainment": 3000.0,
+    "Other": 2000.0
+}
+
+
+def get_user_budgets(user_id):
+    """Fetches user category budget limits, initializing defaults if not custom set."""
+    conn = get_db()
+    cursor = conn.cursor()
+
+    cursor.execute("SELECT category, monthly_limit FROM budgets WHERE user_id = ?", (user_id,))
+    rows = cursor.fetchall()
+
+    user_budgets = {r["category"]: r["monthly_limit"] for r in rows}
+
+    # Ensure all 7 categories exist in dictionary
+    for cat, default_lim in DEFAULT_BUDGET_LIMITS.items():
+        if cat not in user_budgets:
+            cursor.execute(
+                "INSERT OR REPLACE INTO budgets (user_id, category, monthly_limit) VALUES (?, ?, ?)",
+                (user_id, cat, default_lim)
+            )
+            user_budgets[cat] = default_lim
+
+    conn.commit()
+    conn.close()
+    return user_budgets
+
+
+def set_user_budget(user_id, category, monthly_limit):
+    """Updates or inserts a custom monthly budget limit for a specific category."""
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute(
+        "INSERT OR REPLACE INTO budgets (user_id, category, monthly_limit) VALUES (?, ?, ?)",
+        (user_id, category.strip(), max(0.0, float(monthly_limit)))
+    )
+    conn.commit()
+    conn.close()
+
+
+def get_budget_performance(user_id, month=None):
+    """Calculates budget performance, utilization %, and triggers 50%/75%/100% threshold reminders."""
+    conn = get_db()
+    cursor = conn.cursor()
+
+    # Determine targeted month
+    if not month or month == "All":
+        cursor.execute("SELECT strftime('%Y-%m', MAX(date)) AS latest_month FROM expenses WHERE user_id = ?", (user_id,))
+        row = cursor.fetchone()
+        target_month = row["latest_month"] if row and row["latest_month"] else "2026-08"
+    else:
+        target_month = month
+
+    budgets = get_user_budgets(user_id)
+
+    # Fetch actual spent per category for the targeted month
+    cursor.execute("""
+        SELECT category, SUM(amount) AS spent
+        FROM expenses
+        WHERE user_id = ? AND strftime('%Y-%m', date) = ?
+        GROUP BY category
+    """, (user_id, target_month))
+    spent_rows = cursor.fetchall()
+    conn.close()
+
+    spent_map = {r["category"]: r["spent"] for r in spent_rows}
+
+    category_reports = []
+    active_alerts = []
+    total_planned_budget = sum(budgets.values())
+    total_actual_spent = sum(spent_map.values())
+
+    all_categories = ["Food", "Bills", "Transport", "Health", "Shopping", "Entertainment", "Other"]
+
+    for cat in all_categories:
+        limit = budgets.get(cat, DEFAULT_BUDGET_LIMITS.get(cat, 5000.0))
+        spent = spent_map.get(cat, 0.0)
+        pct = round((spent / limit) * 100, 1) if limit > 0 else 0.0
+
+        if pct >= 100:
+            level = "exceeded"
+            badge = "🚨 EXCEEDED"
+            over_by = spent - limit
+            msg = f"Alert! You have exceeded your {cat} budget limit by ₹{over_by:,.2f} ({pct}% used)."
+        elif pct >= 75:
+            level = "warning_75"
+            badge = "⚠️ 75%+ WARNING"
+            msg = f"Caution! You have crossed 75% of your planned {cat} budget ({pct}% used)."
+        elif pct >= 50:
+            level = "warning_50"
+            badge = "⚡ 50%+ THRESHOLD"
+            msg = f"Reminder: You have crossed 50% of your planned {cat} budget ({pct}% used)."
+        else:
+            level = "healthy"
+            badge = "🟢 On Track"
+            msg = f"On track ({pct}% used)."
+
+        cat_report = {
+            "category": cat,
+            "limit": limit,
+            "spent": spent,
+            "remaining": max(0.0, limit - spent),
+            "percentage": pct,
+            "level": level,
+            "badge": badge,
+            "msg": msg
+        }
+        category_reports.append(cat_report)
+
+        if level in ["warning_50", "warning_75", "exceeded"]:
+            active_alerts.append(cat_report)
+
+    overall_pct = round((total_actual_spent / total_planned_budget) * 100, 1) if total_planned_budget > 0 else 0.0
+
+    return {
+        "target_month": target_month,
+        "total_planned": total_planned_budget,
+        "total_spent": total_actual_spent,
+        "overall_pct": overall_pct,
+        "category_reports": category_reports,
+        "active_alerts": active_alerts,
+        "alert_count": len(active_alerts)
+    }
+
+
+# ------------------------------------------------------------------ #
 # Synthetic 7-Month Data Seeder                                       #
 # ------------------------------------------------------------------ #
 
@@ -611,6 +747,18 @@ def init_db():
             date TEXT NOT NULL,
             description TEXT,
             created_at TEXT DEFAULT (datetime('now')),
+            FOREIGN KEY (user_id) REFERENCES users(id)
+        )
+    """)
+
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS budgets (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            category TEXT NOT NULL,
+            monthly_limit REAL NOT NULL,
+            created_at TEXT DEFAULT (datetime('now')),
+            UNIQUE(user_id, category),
             FOREIGN KEY (user_id) REFERENCES users(id)
         )
     """)

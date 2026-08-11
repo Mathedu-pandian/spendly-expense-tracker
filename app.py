@@ -7,7 +7,7 @@ from database.db import (
     init_db, seed_db, create_user, get_user_by_email, get_user_by_id,
     get_user_expenses, get_expense_summary, get_category_totals, add_expense_db,
     get_available_months, get_monthly_trends, get_monthly_analytics_summary,
-    get_inter_category_stats, seed_synthetic_7_months
+    get_inter_category_stats, get_user_budgets, set_user_budget, get_budget_performance
 )
 
 
@@ -68,9 +68,6 @@ def register():
         user_id = create_user(name, email, password)
         if user_id is None:
             return render_template("register.html", error="An account with this email address already exists.")
-
-        # Seed sample 7-month transactions so new user ID has rich analytics & time tracker data immediately
-        seed_synthetic_7_months(user_id)
 
         # Log in newly registered user
         session.clear()
@@ -145,6 +142,7 @@ def dashboard():
     monthly_trends = get_monthly_trends(g.user["id"])
     analytics_summary = get_monthly_analytics_summary(g.user["id"], month=selected_month)
     inter_category_stats = get_inter_category_stats(g.user["id"])
+    budget_perf = get_budget_performance(g.user["id"], month=selected_month)
 
     return render_template(
         "dashboard.html",
@@ -155,12 +153,33 @@ def dashboard():
         monthly_trends=monthly_trends,
         analytics_summary=analytics_summary,
         inter_category_stats=inter_category_stats,
+        budget_perf=budget_perf,
         selected_month=selected_month,
         selected_category=category_filter,
         selected_search=search_query,
         selected_start_date=start_date,
         selected_end_date=end_date
     )
+
+
+@app.route("/budgets", methods=["GET", "POST"])
+@login_required
+def budgets():
+    if request.method == "POST":
+        category = request.form.get("category", "").strip()
+        limit = request.form.get("monthly_limit", 0)
+        if category and limit:
+            try:
+                set_user_budget(g.user["id"], category, float(limit))
+            except ValueError:
+                pass
+        return redirect(url_for("budgets"))
+
+    selected_month = request.args.get("month", "All")
+    budget_perf = get_budget_performance(g.user["id"], month=selected_month)
+    available_months = get_available_months(g.user["id"])
+
+    return render_template("budgets.html", budget_perf=budget_perf, available_months=available_months, selected_month=selected_month)
 
 
 @app.route("/profile")

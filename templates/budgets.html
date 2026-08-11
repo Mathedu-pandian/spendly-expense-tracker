@@ -1,0 +1,145 @@
+{% extends "base.html" %}
+
+{% block title %}Monthly Budget Planner & Threshold Reminders — Spendly{% endblock %}
+
+{% block content %}
+<section class="dashboard-section">
+    <div class="dashboard-container">
+        
+        <!-- Header & Top Actions -->
+        <div class="dashboard-header">
+            <div>
+                <h1 class="dashboard-title">Monthly Budget Planner</h1>
+                <p class="dashboard-subtitle">Set category targets and receive automatic reminders at 50% & 75% thresholds</p>
+            </div>
+            <div class="dashboard-top-actions">
+                <a href="{{ url_for('dashboard') }}" class="btn-ghost">← Back to Dashboard</a>
+                <a href="{{ url_for('add_expense') }}" class="btn-primary">+ Add Expense</a>
+            </div>
+        </div>
+
+        <!-- Active 50% & 75% Threshold Reminders Banner -->
+        {% if budget_perf.active_alerts %}
+        <div class="dashboard-card alerts-banner-card">
+            <div class="card-header-flex">
+                <div>
+                    <h2 class="card-title" style="color: var(--ink);">Threshold Reminders & Alerts</h2>
+                    <p class="card-sub">Active budget notifications for {{ budget_perf.target_month }}</p>
+                </div>
+                <span class="analytics-badge" style="background: rgba(231, 76, 60, 0.15); color: #e74c3c;">
+                    🔔 {{ budget_perf.alert_count }} Active Reminder{% if budget_perf.alert_count > 1 %}s{% endif %}
+                </span>
+            </div>
+
+            <div class="alerts-list">
+                {% for alert in budget_perf.active_alerts %}
+                <div class="alert-banner-item alert-{{ alert.level }}">
+                    <div class="alert-item-header">
+                        <span class="cat-pill cat-pill-{{ alert.category.lower() }}">{{ alert.category }}</span>
+                        <span class="alert-badge alert-badge-{{ alert.level }}">{{ alert.badge }}</span>
+                    </div>
+                    <p class="alert-msg-text">{{ alert.msg }}</p>
+                    <div class="alert-progress-track">
+                        <div class="alert-progress-fill alert-fill-{{ alert.level }}" style="width: {{ alert.percentage if alert.percentage <= 100 else 100 }}%;"></div>
+                    </div>
+                    <div class="alert-footer-info">
+                        <span>Spent: <strong>₹{{ "%.2f"|format(alert.spent) }}</strong></span>
+                        <span>Planned Budget: <strong>₹{{ "%.2f"|format(alert.limit) }}</strong></span>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Overall Budget Overview Card -->
+        <div class="dashboard-card overall-budget-card">
+            <div class="card-header-flex">
+                <div>
+                    <h2 class="card-title">Overall Budget Utilization</h2>
+                    <p class="card-sub">Total planned budget vs total spent for {{ budget_perf.target_month }}</p>
+                </div>
+                <span class="budget-overall-pct">{{ budget_perf.overall_pct }}% Used</span>
+            </div>
+
+            <div class="overall-progress-wrapper">
+                <div class="overall-bar-track">
+                    <div class="overall-bar-fill {% if budget_perf.overall_pct >= 100 %}bg-exceeded{% elif budget_perf.overall_pct >= 75 %}bg-warning-75{% elif budget_perf.overall_pct >= 50 %}bg-warning-50{% else %}bg-healthy{% endif %}"
+                         style="width: {{ budget_perf.overall_pct if budget_perf.overall_pct <= 100 else 100 }}%;"></div>
+                </div>
+
+                <div class="overall-stats-grid">
+                    <div class="overall-stat">
+                        <span class="stat-lbl">Planned Budget</span>
+                        <span class="stat-val">₹{{ "%.2f"|format(budget_perf.total_planned) }}</span>
+                    </div>
+                    <div class="overall-stat">
+                        <span class="stat-lbl">Actual Spent</span>
+                        <span class="stat-val">₹{{ "%.2f"|format(budget_perf.total_spent) }}</span>
+                    </div>
+                    <div class="overall-stat">
+                        <span class="stat-lbl">Remaining Balance</span>
+                        <span class="stat-val" style="color: {% if budget_perf.total_planned >= budget_perf.total_spent %}#27ae60{% else %}#c0392b{% endif %};">
+                            ₹{{ "%.2f"|format(budget_perf.total_planned - budget_perf.total_spent) }}
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Category Budget Limits Adjuster Cards Grid -->
+        <h2 class="section-heading" style="margin: 2.5rem 0 1.25rem;">Category Budget Targets & 50% / 75% Reminders</h2>
+
+        <div class="category-budgets-grid">
+            {% for report in budget_perf.category_reports %}
+            <div class="dashboard-card budget-cat-card card-border-{{ report.level }}">
+                
+                <div class="cat-card-header">
+                    <span class="cat-name-badge cat-{{ report.category.lower() }}">{{ report.category }}</span>
+                    <span class="status-badge status-{{ report.level }}">{{ report.badge }}</span>
+                </div>
+
+                <!-- Utilization Bar -->
+                <div class="cat-budget-body">
+                    <div class="cat-budget-amounts">
+                        <span class="spent-text">Spent: ₹{{ "%.2f"|format(report.spent) }}</span>
+                        <span class="pct-text">{{ report.percentage }}%</span>
+                    </div>
+
+                    <div class="cat-bar-track">
+                        <div class="cat-bar-fill cat-fill-{{ report.category.lower() }}" style="width: {{ report.percentage if report.percentage <= 100 else 100 }}%;"></div>
+                    </div>
+
+                    <div class="cat-reminder-text">
+                        {% if report.level == 'warning_50' %}
+                        ⚡ <strong>50% Threshold Crossed:</strong> You've spent half of your planned {{ report.category }} budget.
+                        {% elif report.level == 'warning_75' %}
+                        ⚠️ <strong>75% Warning:</strong> Caution! Only ₹{{ "%.2f"|format(report.remaining) }} remaining.
+                        {% elif report.level == 'exceeded' %}
+                        🚨 <strong>Budget Exceeded:</strong> Over planned limit by ₹{{ "%.2f"|format(report.spent - report.limit) }}.
+                        {% else %}
+                        🟢 Healthy: ₹{{ "%.2f"|format(report.remaining) }} available.
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Budget Edit Form -->
+                <form method="POST" action="{{ url_for('budgets') }}" class="budget-update-form">
+                    <input type="hidden" name="category" value="{{ report.category }}">
+                    <div class="budget-input-group">
+                        <label for="limit-{{ report.category }}">Monthly Limit (₹)</label>
+                        <div class="input-btn-row">
+                            <input type="number" id="limit-{{ report.category }}" name="monthly_limit"
+                                   value="{{ '%.0f'|format(report.limit) }}" min="0" step="100" class="form-input budget-input">
+                            <button type="submit" class="btn-ghost update-limit-btn">Save</button>
+                        </div>
+                    </div>
+                </form>
+
+            </div>
+            {% endfor %}
+        </div>
+
+    </div>
+</section>
+{% endblock %}
