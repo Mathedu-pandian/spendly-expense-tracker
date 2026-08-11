@@ -38,7 +38,7 @@ document.addEventListener('DOMContentLoaded', function () {
     let timerInterval = null;
     let typeTimer = null;
     let isMusicEnabled = true;
-    const TOTAL_DURATION_SEC = 20; // 20 Seconds total (5 seconds per chapter)
+    const TOTAL_DURATION_SEC = 25; // 25 Seconds total (5 seconds per chapter for 5 chapters)
 
     // ------------------------------------------------------------------ //
     // Web Audio API — Hans Zimmer Cornfield Chase Synthesizer Engine     //
