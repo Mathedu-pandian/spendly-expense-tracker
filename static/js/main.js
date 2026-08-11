@@ -21,6 +21,28 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 
+    // Theme Toggle Switcher Initialization
+    const themeBtn = document.getElementById('theme-toggle-btn');
+    const themeIcon = document.getElementById('theme-toggle-icon');
+
+    function updateThemeIcon() {
+        const currentTheme = document.documentElement.getAttribute('data-theme');
+        if (themeIcon) {
+            themeIcon.textContent = currentTheme === 'dark' ? '☀️' : '🌙';
+        }
+    }
+    updateThemeIcon();
+
+    if (themeBtn) {
+        themeBtn.addEventListener('click', function () {
+            const currentTheme = document.documentElement.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', newTheme);
+            localStorage.setItem('spendly-theme', newTheme);
+            updateThemeIcon();
+        });
+    }
+
     const modal = document.getElementById('video-modal');
     if (!modal) return;
 
