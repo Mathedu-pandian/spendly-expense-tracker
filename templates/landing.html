@@ -18,9 +18,6 @@
         </p>
         <div class="hero-actions">
             <a href="{{ url_for('register') }}" class="btn-primary">Start tracking free</a>
-            <button type="button" id="open-video-btn" class="btn-ghost btn-icon-play">
-                <span class="play-badge">▶</span> Watch Interactive Tour
-            </button>
         </div>
     </div>
     <div class="hero-visual">
@@ -59,278 +56,41 @@
                     <span class="mock-amt">₹1,800</span>
                 </div>
             </div>
-            <button type="button" id="open-video-card-btn" class="mock-visual-trigger">
-                <span class="play-circle">▶</span> Interactive Video Preview
-            </button>
         </div>
     </div>
 </section>
 
 <section class="features">
     <div class="features-inner">
-        <div class="feature-card">
-            <div class="feature-icon">₹</div>
-            <h3 class="feature-title">Log expenses instantly</h3>
-            <p class="feature-body">Add any expense in seconds. Category, amount, date, description — all in one simple form.</p>
-        </div>
-        <div class="feature-card">
-            <div class="feature-icon">◎</div>
-            <h3 class="feature-title">Understand your patterns</h3>
-            <p class="feature-body">See exactly where your money goes with category breakdowns and monthly summaries.</p>
-        </div>
-        <div class="feature-card">
-            <div class="feature-icon">◷</div>
-            <h3 class="feature-title">Filter by time period</h3>
-            <p class="feature-body">View your spending for any date range — last week, last month, or a custom period.</p>
+        <h2 class="section-title">Everything you need to master your money</h2>
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="feature-icon">⚡</div>
+                <h3>Quick Logging</h3>
+                <p>Log transactions in seconds. Categorize with a single tap.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">📊</div>
+                <h3>Monthly Breakdown</h3>
+                <p>Visual progress bars showing exactly where your money went each month.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🔒</div>
+                <h3>Private & Secure</h3>
+                <p>Your financial data stays yours. Password-hashed, session-secured.</p>
+            </div>
         </div>
     </div>
 </section>
 
-<section class="cta-section">
+<section class="cta">
     <div class="cta-inner">
-        <h2 class="cta-title">Ready to take control?</h2>
-        <p class="cta-body">Join thousands of people who track their expenses with Spendly.</p>
+        <h2>Ready to take control?</h2>
+        <p>Join thousands of users tracking their expenses with Spendly today.</p>
         <div class="cta-actions">
-            <a href="{{ url_for('register') }}" class="btn-primary">Create free account</a>
-            <button type="button" id="open-video-cta-btn" class="btn-ghost">
-                <span class="play-badge">▶</span> Watch Video Walkthrough
-            </button>
+            <a href="{{ url_for('register') }}" class="btn-primary">Create your free account</a>
         </div>
     </div>
 </section>
-
-<!-- ================================================================== -->
-<!-- Interactive Video Modal (<dialog>)                                 -->
-<!-- ================================================================== -->
-<dialog id="video-modal" class="interactive-video-dialog" closedby="any">
-    <div class="video-modal-container">
-        
-        <!-- Modal Header -->
-        <div class="video-modal-header">
-            <div class="video-modal-title-group">
-                <span class="video-live-badge">● LIVE INTERACTIVE TOUR</span>
-                <h3 class="video-modal-title">Spendly Product Walkthrough</h3>
-            </div>
-            <button type="button" id="close-video-modal-btn" class="video-modal-close" aria-label="Close modal">&times;</button>
-        </div>
-
-        <!-- Chapter Selector Pills -->
-        <div class="video-chapters-bar">
-            <button type="button" class="chapter-btn active" data-chapter="1">
-                <span class="chap-num">01</span> Time & Metrics
-            </button>
-            <button type="button" class="chapter-btn" data-chapter="2">
-                <span class="chap-num">02</span> Dual Spidergraph
-            </button>
-            <button type="button" class="chapter-btn" data-chapter="3">
-                <span class="chap-num">03</span> Multi-Month Matrix
-            </button>
-            <button type="button" class="chapter-btn" data-chapter="4">
-                <span class="chap-num">04</span> Actions & Insights
-            </button>
-            <button type="button" class="chapter-btn" data-chapter="5">
-                <span class="chap-num">05</span> Live Sandbox
-            </button>
-        </div>
-
-        <!-- Video Player Simulator Area -->
-        <div class="video-player-viewport">
-            
-            <!-- Chapter 1 Scene: Time Tracker & Executive Metrics -->
-            <div class="video-scene active" id="scene-1">
-                <div class="simulated-app-window">
-                    <div class="simulated-header">
-                        <div class="simulated-dots"><span></span><span></span><span></span></div>
-                        <span class="simulated-url">https://spendly-expense-tracker-cn4g.onrender.com/dashboard</span>
-                    </div>
-                    <div class="simulated-body">
-                        <div class="simulated-form-preview">
-                            <div class="sim-badge">Facility 1: Custom Time Tracker & Metrics</div>
-                            <div class="sim-metrics-grid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem; margin-bottom: 0.75rem;">
-                                <div class="sim-metric-box" style="background: rgba(255,255,255,0.05); padding: 0.5rem; border-radius: 8px; text-align: center;">
-                                    <span style="font-size: 0.7rem; color: #8b949e;">TOTAL SPENT</span>
-                                    <div style="font-size: 1rem; font-weight: 700; color: #2ecc71;">₹24,548.00</div>
-                                </div>
-                                <div class="sim-metric-box" style="background: rgba(255,255,255,0.05); padding: 0.5rem; border-radius: 8px; text-align: center;">
-                                    <span style="font-size: 0.7rem; color: #8b949e;">TRANSACTIONS</span>
-                                    <div style="font-size: 1rem; font-weight: 700; color: #3498db;">51 Records</div>
-                                </div>
-                                <div class="sim-metric-box" style="background: rgba(255,255,255,0.05); padding: 0.5rem; border-radius: 8px; text-align: center;">
-                                    <span style="font-size: 0.7rem; color: #8b949e;">TOP CATEGORY</span>
-                                    <div style="font-size: 1rem; font-weight: 700; color: #f39c12;">Food (₹7,800)</div>
-                                </div>
-                            </div>
-                            <div class="sim-field">
-                                <label style="font-size: 0.75rem; color: #8b949e;">Custom Range Filter</label>
-                                <div class="sim-input-box" style="display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.08); padding: 0.4rem 0.75rem; border-radius: 6px; font-size: 0.8rem;">
-                                    <span>📅 2026-08-01 ➔ 2026-08-10</span>
-                                    <span style="color: #2ecc71; font-weight: 600;">⚡ Preset Applied</span>
-                                </div>
-                            </div>
-                            <div class="sim-btn-active">✓ Filtered 51 Transactions</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Chapter 2 Scene: 7-Axis Dual Spidergraph & Threshold Alerts -->
-            <div class="video-scene" id="scene-2">
-                <div class="simulated-app-window">
-                    <div class="simulated-header">
-                        <div class="simulated-dots"><span></span><span></span><span></span></div>
-                        <span class="simulated-url">https://spendly-expense-tracker-cn4g.onrender.com/budgets</span>
-                    </div>
-                    <div class="simulated-body">
-                        <div class="simulated-charts-preview">
-                            <div class="sim-badge">Facility 2: 7-Axis Dual Spidergraph Radar & Threshold Alerts</div>
-                            <div style="display: flex; gap: 1rem; align-items: center; justify-content: center; margin-top: 0.5rem;">
-                                <div style="width: 140px; height: 140px; position: relative; border-radius: 50%; border: 1px dashed rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center;">
-                                    <svg viewBox="0 0 100 100" style="width: 100%; height: 100%;">
-                                        <polygon points="50,10 85,30 90,70 50,90 10,70 15,30" fill="rgba(52, 152, 219, 0.15)" stroke="#3498db" stroke-dasharray="2 2" stroke-width="1"/>
-                                        <polygon points="50,20 80,35 75,75 45,80 20,65 25,35" fill="rgba(243, 156, 18, 0.3)" stroke="#f39c12" stroke-width="2"/>
-                                    </svg>
-                                    <span style="position: absolute; font-size: 0.65rem; color: #ffffff; background: rgba(0,0,0,0.6); padding: 2px 6px; border-radius: 4px;">Target vs Actual</span>
-                                </div>
-                                <div style="display: flex; flex-direction: column; gap: 0.4rem; flex: 1;">
-                                    <div style="background: rgba(241, 196, 15, 0.15); border: 1px solid #f1c40f; padding: 0.4rem; border-radius: 6px; font-size: 0.75rem; color: #f1c40f;">
-                                        ⚡ 50%+ THRESHOLD: Food Budget at 62%
-                                    </div>
-                                    <div style="background: rgba(231, 76, 60, 0.15); border: 1px solid #e74c3c; padding: 0.4rem; border-radius: 6px; font-size: 0.75rem; color: #e74c3c;">
-                                        ⚠️ 75%+ WARNING: Bills Budget at 88%
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Chapter 3 Scene: Inter-Category Statistics Matrix -->
-            <div class="video-scene" id="scene-3">
-                <div class="simulated-app-window">
-                    <div class="simulated-header">
-                        <div class="simulated-dots"><span></span><span></span><span></span></div>
-                        <span class="simulated-url">https://spendly-expense-tracker-cn4g.onrender.com/dashboard</span>
-                    </div>
-                    <div class="simulated-body">
-                        <div class="simulated-budget-preview">
-                            <div class="sim-badge">Facility 3: Inter-Category Statistics Matrix (7 Months)</div>
-                            <div style="background: rgba(255,255,255,0.05); padding: 0.6rem; border-radius: 8px; font-size: 0.75rem;">
-                                <div style="display: flex; justify-content: space-between; font-weight: 700; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 0.3rem; margin-bottom: 0.4rem;">
-                                    <span>Category</span>
-                                    <span>Jun 2026</span>
-                                    <span>Jul 2026</span>
-                                    <span>Aug 2026</span>
-                                    <span>Peak Month</span>
-                                </div>
-                                <div style="display: flex; justify-content: space-between; margin-bottom: 0.3rem;">
-                                    <span>🍔 Food</span>
-                                    <span>₹7,200</span>
-                                    <span>₹8,100</span>
-                                    <span style="color: #2ecc71; font-weight: 700;">₹8,400</span>
-                                    <span style="background: #2ecc71; color: #000; padding: 0 4px; border-radius: 4px;">Aug 2026</span>
-                                </div>
-                                <div style="display: flex; justify-content: space-between;">
-                                    <span>⚡ Bills</span>
-                                    <span style="color: #2ecc71; font-weight: 700;">₹6,500</span>
-                                    <span>₹5,900</span>
-                                    <span>₹6,100</span>
-                                    <span style="background: #3498db; color: #fff; padding: 0 4px; border-radius: 4px;">Jun 2026</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Chapter 4 Scene: Actions & Insights (Edit, Delete, Dark Mode) -->
-            <div class="video-scene" id="scene-4">
-                <div class="simulated-app-window">
-                    <div class="simulated-header">
-                        <div class="simulated-dots"><span></span><span></span><span></span></div>
-                        <span class="simulated-url">https://spendly-expense-tracker-cn4g.onrender.com/expenses/edit</span>
-                    </div>
-                    <div class="simulated-body">
-                        <div class="simulated-budget-preview">
-                            <div class="sim-badge">Facility 4: Inline Edit/Delete, EOM Insights & Dark Mode</div>
-                            <div style="display: flex; flex-direction: column; gap: 0.5rem; margin-top: 0.4rem;">
-                                <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.06); padding: 0.5rem; border-radius: 6px; font-size: 0.8rem;">
-                                    <span>10 Aug 2026 — 🍔 Food (₹1,250.00)</span>
-                                    <div style="display: flex; gap: 0.3rem;">
-                                        <span style="background: #3498db; color: #fff; padding: 2px 6px; border-radius: 4px; font-size: 0.7rem;">✏️ Edit</span>
-                                        <span style="background: #e74c3c; color: #fff; padding: 2px 6px; border-radius: 4px; font-size: 0.7rem;">🗑️ Delete</span>
-                                    </div>
-                                </div>
-                                <div style="background: rgba(46, 204, 113, 0.1); border: 1px dashed #2ecc71; padding: 0.4rem 0.6rem; border-radius: 6px; font-size: 0.75rem; color: #2ecc71;">
-                                    🤖 EOM Advisory: Food spend increased 4.2% MoM. Consider meal prep to save ~15%.
-                                </div>
-                                <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.75rem; color: #8b949e;">
-                                    <span>🌙 Dark / ☀️ Light Mode Persistence</span>
-                                    <span style="color: #f1c40f;">localStorage Active</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Chapter 5 Scene: Interactive Live Sandbox -->
-            <div class="video-scene" id="scene-5">
-                <div class="simulated-app-window sandbox-window">
-                    <div class="simulated-header">
-                        <div class="simulated-dots"><span></span><span></span><span></span></div>
-                        <span class="simulated-url">https://spendly.app/sandbox-preview</span>
-                    </div>
-                    <div class="simulated-body sandbox-body">
-                        <div class="sandbox-title">⚡ Facility 5: Interactive Expense Sandbox</div>
-                        <p class="sandbox-sub">Type an expense below to see the interactive chart update in real-time!</p>
-                        
-                        <div class="sandbox-form">
-                            <div class="sandbox-inputs">
-                                <input type="number" id="sandbox-amt" placeholder="Enter amount (e.g. 500)" value="600" min="1" max="100000">
-                                <select id="sandbox-cat">
-                                    <option value="Food">Food & Dining</option>
-                                    <option value="Bills">Bills & Utilities</option>
-                                    <option value="Shopping">Shopping</option>
-                                    <option value="Health">Health & Wellness</option>
-                                </select>
-                                <button type="button" id="sandbox-add-btn" class="btn-primary">Add Expense</button>
-                            </div>
-                        </div>
-
-                        <div class="sandbox-results">
-                            <div class="sandbox-total-display">Total Tracked: <strong id="sandbox-total-val">₹13,050</strong></div>
-                            <div class="sandbox-bar-preview">
-                                <div class="sandbox-bar-track">
-                                    <div id="sandbox-bar-fill" class="sandbox-bar-fill" style="width: 65%;"></div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Interactive Video Scrubbing Controls -->
-            <div class="video-controls-bar">
-                <button type="button" id="video-play-btn" class="player-control-btn" title="Play / Pause">
-                    <span id="video-play-icon">⏸</span>
-                </button>
-                <div class="video-scrubber-track" id="scrubber-track">
-                    <div class="video-progress-fill" id="video-progress-fill"></div>
-                </div>
-                <span class="video-time-display" id="video-time-display">0:00 / 0:20</span>
-                <button type="button" id="video-speed-btn" class="player-speed-btn">1.0x</button>
-                <button type="button" id="music-toggle-btn" class="music-toggle-btn active" title="Toggle Hans Zimmer Cornfield Chase Music">🎵 Cornfield Chase: ON</button>
-            </div>
-        </div>
-
-        <!-- Modal Footer CTA -->
-        <div class="video-modal-footer">
-            <span class="footer-hint">Ready to manage your expenses effortlessly?</span>
-            <a href="{{ url_for('register') }}" class="btn-primary">Get started with Spendly free</a>
-        </div>
-
-    </div>
-</dialog>
 
 {% endblock %}
