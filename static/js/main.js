@@ -1,6 +1,26 @@
 // main.js — Interactive Video Modal & Hans Zimmer Cornfield Chase Audio Engine
 
 document.addEventListener('DOMContentLoaded', function () {
+    // Segment Tab Switcher Initialization
+    const segmentTabs = document.querySelectorAll('.segment-tab');
+    const tabContents = document.querySelectorAll('.tab-content');
+
+    segmentTabs.forEach(tab => {
+        tab.addEventListener('click', function () {
+            const targetId = this.getAttribute('data-target');
+            if (!targetId) return;
+
+            segmentTabs.forEach(t => t.classList.remove('active'));
+            tabContents.forEach(c => c.classList.remove('active'));
+
+            this.classList.add('active');
+            const targetEl = document.getElementById(targetId);
+            if (targetEl) {
+                targetEl.classList.add('active');
+            }
+        });
+    });
+
     const modal = document.getElementById('video-modal');
     if (!modal) return;
 

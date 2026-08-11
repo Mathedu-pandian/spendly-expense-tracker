@@ -6,7 +6,7 @@
     <title>{% block title %}Spendly{% endblock %}</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Outfit:wght@400;500;600;700&family=DM+Serif+Display&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     {% block head %}{% endblock %}
 </head>
@@ -20,9 +20,9 @@
             </a>
             <div class="nav-links">
                 {% if g.user %}
-                    <a href="{{ url_for('dashboard') }}" class="nav-item">Dashboard</a>
-                    <a href="{{ url_for('budgets') }}" class="nav-item">Budgets</a>
-                    <a href="{{ url_for('profile') }}" class="nav-user">
+                    <a href="{{ url_for('dashboard') }}" class="nav-item {% if request.path == url_for('dashboard') %}active-nav{% endif %}">Dashboard</a>
+                    <a href="{{ url_for('budgets') }}" class="nav-item {% if request.path == url_for('budgets') %}active-nav{% endif %}">Budgets</a>
+                    <a href="{{ url_for('profile') }}" class="nav-user {% if request.path == url_for('profile') %}active-nav{% endif %}">
                         <span class="user-avatar">{{ g.user.name[0] | upper }}</span>
                         <span class="user-name">{{ g.user.name }}</span>
                     </a>
