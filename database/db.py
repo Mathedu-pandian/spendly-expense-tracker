@@ -631,6 +631,62 @@ def get_budget_performance(user_id, month=None):
 
     overall_pct = round((total_actual_spent / total_planned_budget) * 100, 1) if total_planned_budget > 0 else 0.0
 
+    # Calculate Dual Radar Nodes (Planned Budget Target vs Actual Expense)
+    import math
+    max_scale = max([r["limit"] for r in category_reports] + [r["spent"] for r in category_reports] + [1000.0])
+
+    radar_nodes = []
+    budget_pts_list = []
+    expense_pts_list = []
+
+    center_x = 150
+    center_y = 150
+    max_radius = 100
+
+    for i, cat in enumerate(all_categories):
+        angle = (2 * math.pi * i / 7) - (math.pi / 2)
+        rep = next(r for r in category_reports if r["category"] == cat)
+
+        limit_amt = rep["limit"]
+        spent_amt = rep["spent"]
+
+        plan_score = max(10, min(100, (limit_amt / max_scale) * 100))
+        spent_score = max(10, min(100, (spent_amt / max_scale) * 100))
+
+        plan_r = max_radius * (plan_score / 100.0)
+        spent_r = max_radius * (spent_score / 100.0)
+
+        plan_x = round(center_x + plan_r * math.cos(angle), 1)
+        plan_y = round(center_y + plan_r * math.sin(angle), 1)
+
+        spent_x = round(center_x + spent_r * math.cos(angle), 1)
+        spent_y = round(center_y + spent_r * math.sin(angle), 1)
+
+        # Label tip position
+        lbl_r = max_radius + 28
+        lbl_x = round(center_x + lbl_r * math.cos(angle), 1)
+        lbl_y = round(center_y + lbl_r * math.sin(angle), 1)
+
+        budget_pts_list.append(f"{plan_x},{plan_y}")
+        expense_pts_list.append(f"{spent_x},{spent_y}")
+
+        radar_nodes.append({
+            "category": cat,
+            "limit": limit_amt,
+            "spent": spent_amt,
+            "plan_x": plan_x,
+            "plan_y": plan_y,
+            "spent_x": spent_x,
+            "spent_y": spent_y,
+            "lbl_x": lbl_x,
+            "lbl_y": lbl_y,
+            "level": rep["level"],
+            "pct": rep["percentage"]
+        })
+
+    budget_polygon_points = " ".join(budget_pts_list)
+    expense_polygon_points = " ".join(expense_pts_list)
+
     return {
         "target_month": target_month,
         "total_planned": total_planned_budget,
@@ -638,7 +694,10 @@ def get_budget_performance(user_id, month=None):
         "overall_pct": overall_pct,
         "category_reports": category_reports,
         "active_alerts": active_alerts,
-        "alert_count": len(active_alerts)
+        "alert_count": len(active_alerts),
+        "radar_nodes": radar_nodes,
+        "budget_polygon_points": budget_polygon_points,
+        "expense_polygon_points": expense_polygon_points
     }
 
 

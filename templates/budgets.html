@@ -87,6 +87,73 @@
             </div>
         </div>
 
+        <!-- Dual 7-Axis Spidergraph: Budget Target vs Actual Expense -->
+        <div class="dashboard-card dual-spidergraph-card">
+            <div class="card-header-flex">
+                <div>
+                    <h2 class="card-title">Parallel Visualization: Budget Target vs. Actual Expense</h2>
+                    <p class="card-sub">7-Axis Radar Overlay comparing planned targets against actual spending in {{ budget_perf.target_month }}</p>
+                </div>
+                <div class="radar-legend-container">
+                    <span class="radar-legend-item legend-budget"><span class="legend-dot dot-budget"></span> Planned Target</span>
+                    <span class="radar-legend-item legend-expense"><span class="legend-dot dot-expense"></span> Actual Expense</span>
+                </div>
+            </div>
+
+            <div class="dual-radar-wrapper">
+                <div class="dual-radar-svg-container">
+                    <svg viewBox="0 0 300 300" class="dual-radar-svg">
+                        <!-- Concentric Heptagon Grid Polygons (25%, 50%, 75%, 100%) -->
+                        <polygon points="150,50 221.5,84.4 239.1,162.2 189.1,228.4 110.9,228.4 60.9,162.2 78.5,84.4" fill="none" stroke="var(--border)" stroke-dasharray="2 2"/>
+                        <polygon points="150,75 203.6,100.8 216.8,159.2 179.3,208.8 120.7,208.8 83.2,159.2 96.4,100.8" fill="none" stroke="var(--border-soft)"/>
+                        <polygon points="150,100 185.7,117.2 194.5,156.1 169.5,189.2 130.5,189.2 105.5,156.1 114.3,117.2" fill="none" stroke="var(--border-soft)"/>
+
+                        <!-- 7 Radial Axis Lines & Category Labels -->
+                        {% for node in budget_perf.radar_nodes %}
+                        <line x1="150" y1="150" x2="{{ node.lbl_x }}" y2="{{ node.lbl_y }}" stroke="var(--border-soft)" stroke-width="1.2"/>
+                        <text x="{{ node.lbl_x }}" y="{{ node.lbl_y }}" text-anchor="middle" dominant-baseline="central" class="radar-axis-text">{{ node.category }}</text>
+                        {% endfor %}
+
+                        <!-- Polygon 1: Planned Budget Target (Blue Dashed) -->
+                        <polygon points="{{ budget_perf.budget_polygon_points }}" fill="rgba(52, 152, 219, 0.18)" stroke="#3498db" stroke-width="2" stroke-dasharray="4 3"/>
+
+                        <!-- Polygon 2: Actual Expense (Amber Gold / Red Gradient Overlay) -->
+                        <polygon points="{{ budget_perf.expense_polygon_points }}" fill="rgba(230, 126, 34, 0.35)" stroke="#e67e22" stroke-width="2.5"/>
+
+                        <!-- Vertices & Tooltip Nodes -->
+                        {% for node in budget_perf.radar_nodes %}
+                        <!-- Planned Target Node -->
+                        <circle cx="{{ node.plan_x }}" cy="{{ node.plan_y }}" r="4" fill="#3498db" stroke="#ffffff" stroke-width="1.5">
+                            <title>{{ node.category }} Planned Target: ₹{{ "%.2f"|format(node.limit) }}</title>
+                        </circle>
+
+                        <!-- Actual Expense Node (Red if exceeded) -->
+                        <circle cx="{{ node.spent_x }}" cy="{{ node.spent_y }}" r="5" fill="{% if node.spent > node.limit %}#e74c3c{% else %}#e67e22{% endif %}" stroke="#ffffff" stroke-width="2">
+                            <title>{{ node.category }} Actual Spent: ₹{{ "%.2f"|format(node.spent) }} ({{ node.pct }}% of target)</title>
+                        </circle>
+                        {% endfor %}
+                    </svg>
+                </div>
+
+                <!-- Parallel Matrix Summary Table -->
+                <div class="parallel-breakdown-panel">
+                    <h3 class="parallel-title">Category Parallel Comparison</h3>
+                    <div class="parallel-grid">
+                        {% for node in budget_perf.radar_nodes %}
+                        <div class="parallel-card parallel-border-{{ node.level }}">
+                            <span class="cat-pill cat-pill-{{ node.category.lower() }}">{{ node.category }}</span>
+                            <div class="parallel-num-row">
+                                <span class="lbl-plan">Target: ₹{{ "%.0f"|format(node.limit) }}</span>
+                                <span class="lbl-actual {% if node.spent > node.limit %}text-exceeded{% endif %}">Actual: ₹{{ "%.0f"|format(node.spent) }}</span>
+                            </div>
+                            <span class="pct-badge pct-{{ node.level }}">{{ node.pct }}%</span>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Category Budget Limits Adjuster Cards Grid -->
         <h2 class="section-heading" style="margin: 2.5rem 0 1.25rem;">Category Budget Targets & 50% / 75% Reminders</h2>
 
