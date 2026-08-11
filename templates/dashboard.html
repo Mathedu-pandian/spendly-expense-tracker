@@ -127,6 +127,52 @@
         </div>
         {% endif %}
 
+        <!-- Monthly Budget Targets & Utilization Section -->
+        <div class="dashboard-card budget-overview-card">
+            <div class="card-header-flex">
+                <div>
+                    <h2 class="card-title">Monthly Budget Targets & Utilization</h2>
+                    <p class="card-sub">Category spending vs planned limits for {{ budget_perf.target_month if budget_perf else 'current month' }}</p>
+                </div>
+                <a href="{{ url_for('budgets') }}" class="btn-primary" style="padding: 0.55rem 1.1rem; font-size: 0.85rem;">🎯 Manage Budget Targets →</a>
+            </div>
+
+            {% if budget_perf %}
+            <div class="budget-overall-bar-container" style="margin-bottom: 1.5rem; background: var(--paper-warm); padding: 1.25rem; border-radius: var(--radius-sm); border: 1px solid var(--border-soft);">
+                <div style="display: flex; justify-content: space-between; font-weight: 600; margin-bottom: 0.5rem; font-size: 0.9rem;">
+                    <span>Overall Target Utilization ({{ budget_perf.overall_pct }}%)</span>
+                    <span>₹{{ "%.2f"|format(budget_perf.total_spent) }} / ₹{{ "%.2f"|format(budget_perf.total_planned) }}</span>
+                </div>
+                <div class="cat-bar-track" style="height: 12px;">
+                    <div class="cat-bar-fill" style="width: {{ budget_perf.overall_pct if budget_perf.overall_pct <= 100 else 100 }}%; background: {% if budget_perf.overall_pct >= 100 %}#e74c3c{% elif budget_perf.overall_pct >= 75 %}#e67e22{% elif budget_perf.overall_pct >= 50 %}#f1c40f{% else %}#2ecc71{% endif %};"></div>
+                </div>
+            </div>
+
+            <div class="category-bars-list">
+                {% for r in budget_perf.category_reports %}
+                <div class="category-bar-item">
+                    <div class="category-bar-head">
+                        <span style="display: flex; align-items: center; gap: 0.4rem; font-weight: 600;">
+                            <span class="cat-pill cat-pill-{{ r.category.lower() }}">{{ r.category }}</span>
+                            <span style="font-size: 0.8rem; color: var(--ink-muted);">Target: ₹{{ "%.2f"|format(r.limit) }}</span>
+                        </span>
+                        <span class="cat-total-val">
+                            ₹{{ "%.2f"|format(r.spent) }} ({{ r.percentage }}%)
+                            {% if r.percentage >= 100 %}<span class="alert-badge alert-exceeded" style="margin-left: 0.3rem;">🚨 EXCEEDED</span>
+                            {% elif r.percentage >= 75 %}<span class="alert-badge alert-warning" style="margin-left: 0.3rem;">⚠️ 75%+</span>
+                            {% elif r.percentage >= 50 %}<span class="alert-badge alert-threshold" style="margin-left: 0.3rem;">⚡ 50%+</span>
+                            {% endif %}
+                        </span>
+                    </div>
+                    <div class="cat-bar-track">
+                        <div class="cat-bar-fill cat-fill-{{ r.category.lower() }}" style="width: {{ r.percentage if r.percentage <= 100 else 100 }}%;"></div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+        </div>
+
         <!-- 7-Month Analytics Trend Bar Chart -->
         {% if monthly_trends %}
         <div class="dashboard-card trends-card">

@@ -10,6 +10,18 @@
         <h1 class="hero-title">
             Know where your<br>
             <em>money goes</em>
+{% extends "base.html" %}
+
+{% block title %}Spendly — Track Every Rupee{% endblock %}
+
+{% block content %}
+
+<section class="hero">
+    <div class="hero-inner">
+        <div class="hero-badge">Personal Finance Tracker</div>
+        <h1 class="hero-title">
+            Know where your<br>
+            <em>money goes</em>
         </h1>
         <p class="hero-subtitle">
             Log expenses, understand your spending patterns,
@@ -18,6 +30,7 @@
         </p>
         <div class="hero-actions">
             <a href="{{ url_for('register') }}" class="btn-primary">Start tracking free</a>
+            <button id="open-video-btn" class="btn-ghost">See how it works ▶</button>
         </div>
     </div>
     <div class="hero-visual">
@@ -89,8 +102,126 @@
         <p>Join thousands of users tracking their expenses with Spendly today.</p>
         <div class="cta-actions">
             <a href="{{ url_for('register') }}" class="btn-primary">Create your free account</a>
+            <button id="open-video-cta-btn" class="btn-ghost">Watch product demo ▶</button>
         </div>
     </div>
 </section>
+
+<!-- Interactive Product Video Modal (Native HTML5 <dialog> with Audio & Scrubber) -->
+<dialog id="video-modal" class="modal-dialog">
+    <div class="modal-window">
+        <div class="modal-header">
+            <div class="modal-title-group">
+                <span class="modal-badge">Interactive Demo</span>
+                <h3 class="modal-heading">Experience Spendly in Action</h3>
+            </div>
+            <button id="close-video-modal-btn" class="btn-close" aria-label="Close modal">&times;</button>
+        </div>
+
+        <!-- Chapter Navigation Pills -->
+        <div class="chapter-nav">
+            <button class="chapter-btn active" data-chapter="1">1. Quick Log</button>
+            <button class="chapter-btn" data-chapter="2">2. Visual Charts</button>
+            <button class="chapter-btn" data-chapter="3">3. Time Tracker</button>
+            <button class="chapter-btn" data-chapter="4">4. Smart Advisory</button>
+        </div>
+
+        <!-- Video Stage Display -->
+        <div class="video-stage">
+            
+            <!-- Chapter 1 Scene: Typewriter Logging -->
+            <div class="video-scene active" data-scene="1">
+                <div class="scene-card">
+                    <span class="scene-tag">⚡ Fast Transaction Entry</span>
+                    <div class="typewriter-box">
+                        <div class="typewriter-line">
+                            <span class="label">Amount:</span>
+                            <span class="value animated-type-amount">₹450</span>
+                        </div>
+                        <div class="typewriter-line">
+                            <span class="label">Category:</span>
+                            <span class="value">Food & Dining</span>
+                        </div>
+                        <div class="typewriter-line">
+                            <span class="label">Note:</span>
+                            <span class="value animated-type-note">Dinner with friends</span>
+                        </div>
+                        <button class="btn-primary sim-btn-active" style="margin-top: 1rem; width: 100%;">✓ Added to Spendly</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Chapter 2 Scene: Donut Pie & Radar Spidergraph -->
+            <div class="video-scene" data-scene="2">
+                <div class="scene-card text-center">
+                    <span class="scene-tag">📊 Category Breakdown & Footprint</span>
+                    <div class="demo-charts-flex" style="display: flex; gap: 1rem; justify-content: center; align-items: center; margin-top: 1rem;">
+                        <div class="chart-box-mini">
+                            <div style="font-size: 0.8rem; font-weight: 600; color: var(--ink-muted); margin-bottom: 0.4rem;">Category Pie</div>
+                            <svg width="120" height="120" viewBox="0 0 100 100">
+                                <circle cx="50" cy="50" r="40" fill="none" stroke="#e67e22" stroke-width="16" stroke-dasharray="70 180"></circle>
+                                <circle cx="50" cy="50" r="40" fill="none" stroke="#3498db" stroke-width="16" stroke-dasharray="50 200" stroke-dashoffset="-70"></circle>
+                                <circle cx="50" cy="50" r="40" fill="none" stroke="#2ecc71" stroke-width="16" stroke-dasharray="40 210" stroke-dashoffset="-120"></circle>
+                            </svg>
+                        </div>
+                        <div class="chart-box-mini">
+                            <div style="font-size: 0.8rem; font-weight: 600; color: var(--ink-muted); margin-bottom: 0.4rem;">7-Axis Radar</div>
+                            <svg width="120" height="120" viewBox="0 0 100 100">
+                                <polygon points="50,10 85,30 85,70 50,90 15,70 15,30" fill="none" stroke="rgba(0,0,0,0.15)"></polygon>
+                                <polygon points="50,22 75,38 70,62 50,78 28,62 30,35" fill="rgba(193, 127, 36, 0.3)" stroke="var(--accent)" stroke-width="2"></polygon>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Chapter 3 Scene: Custom Date Range Tracker -->
+            <div class="video-scene" data-scene="3">
+                <div class="scene-card">
+                    <span class="scene-tag">⏱️ Time Range Tracker</span>
+                    <div style="background: var(--paper); padding: 1rem; border-radius: var(--radius-sm); border: 1px solid var(--border); margin-top: 0.8rem;">
+                        <div style="display: flex; justify-content: space-between; font-size: 0.85rem; font-weight: 600; margin-bottom: 0.5rem;">
+                            <span>Range: Aug 1 - Aug 15</span>
+                            <span style="color: var(--accent);">₹6,420 Spent</span>
+                        </div>
+                        <div style="height: 8px; background: var(--border); border-radius: 999px; overflow: hidden;">
+                            <div style="width: 52%; height: 100%; background: var(--accent);"></div>
+                        </div>
+                        <div style="display: flex; gap: 0.4rem; margin-top: 0.75rem;">
+                            <span class="preset-pill" style="font-size: 0.7rem; padding: 0.2rem 0.5rem;">⚡ Last 7 Days</span>
+                            <span class="preset-pill" style="font-size: 0.7rem; padding: 0.2rem 0.5rem;">⚡ Last 30 Days</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Chapter 4 Scene: Smart Monthly Advisory Report -->
+            <div class="video-scene" data-scene="4">
+                <div class="scene-card">
+                    <span class="scene-tag">💡 Smart AI Advisory</span>
+                    <div class="advisory-box" style="margin-top: 0.8rem; background: var(--paper-warm);">
+                        <span class="advisory-icon">🤖</span>
+                        <div class="advisory-text">
+                            <strong class="advisory-heading">August Insights:</strong>
+                            <p class="advisory-body" style="font-size: 0.85rem;">"Food & Dining is your top expense category (₹4,500). Planning meals could save up to 15% next month."</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Custom Video Player Controls Bar -->
+        <div class="player-controls">
+            <button id="video-play-btn" class="player-btn" aria-label="Play/Pause"><span id="video-play-icon">⏸</span></button>
+            <div id="scrubber-track" class="scrubber-track">
+                <div id="video-progress-fill" class="scrubber-fill" style="width: 0%;"></div>
+            </div>
+            <span id="video-time-display" class="player-time">0:00 / 0:20</span>
+            <button id="video-speed-btn" class="player-btn speed-btn">1.0x</button>
+            <button id="music-toggle-btn" class="player-btn music-btn active">🎵 Cornfield Chase: ON</button>
+        </div>
+    </div>
+</dialog>
 
 {% endblock %}
