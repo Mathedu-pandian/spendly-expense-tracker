@@ -1472,13 +1472,59 @@ a { color: inherit; text-decoration: none; }
 
 /* Category Colors */
 
-.cat-food, .cat-pill-food, .cat-fill-food { background: #e67e22; color: #ffffff; }
-.cat-bills, .cat-pill-bills, .cat-fill-bills { background: #e74c3c; color: #ffffff; }
-.cat-transport, .cat-pill-transport, .cat-fill-transport { background: #3498db; color: #ffffff; }
-.cat-health, .cat-pill-health, .cat-fill-health { background: #2ecc71; color: #ffffff; }
-.cat-shopping, .cat-pill-shopping, .cat-fill-shopping { background: #9b59b6; color: #ffffff; }
-.cat-entertainment, .cat-pill-entertainment, .cat-fill-entertainment { background: #f1c40f; color: #000000; }
-.cat-other, .cat-pill-other, .cat-fill-other { background: #7f8c8d; color: #ffffff; }
+.cat-food, .cat-pill-food, .cat-fill-food { background: #fef5e7; color: #d35400; border: 1px solid #f5b041; }
+.cat-bills, .cat-pill-bills, .cat-fill-bills { background: #ebf5fb; color: #2980b9; border: 1px solid #5dade2; }
+.cat-transport, .cat-pill-transport, .cat-fill-transport { background: #eaedd0; color: #4a5d00; border: 1px solid #b3c25a; }
+.cat-health, .cat-pill-health, .cat-fill-health { background: #e8f8f5; color: #117a65; border: 1px solid #48c9b0; }
+.cat-shopping, .cat-pill-shopping, .cat-fill-shopping { background: #f5eeef; color: #884ea0; border: 1px solid #af7ac5; }
+.cat-entertainment, .cat-pill-entertainment, .cat-fill-entertainment { background: #fef9e7; color: #b7950b; border: 1px solid #f4d03f; }
+.cat-other, .cat-pill-other, .cat-fill-other { background: #eef2f3; color: #455a64; border: 1px solid #90a4ae; }
+
+/* Table Action Buttons */
+
+.table-actions {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.btn-action-edit, .btn-action-delete {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    border: 1px solid var(--border-soft);
+    background: #ffffff;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-decoration: none;
+}
+
+.btn-action-edit:hover {
+    background: #ebf5fb;
+    border-color: #3498db;
+    transform: translateY(-1px);
+}
+
+.btn-action-delete {
+    color: #e74c3c;
+}
+
+.btn-action-delete:hover {
+    background: #fdecea;
+    border-color: #e74c3c;
+    transform: translateY(-1px);
+}
+
+.delete-form-inline {
+    display: inline-block;
+    margin: 0;
+    padding: 0;
+}
 
 .cat-name-badge {
     display: inline-block;

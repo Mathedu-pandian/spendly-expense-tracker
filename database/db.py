@@ -67,6 +67,37 @@ def add_expense_db(user_id, amount, category, date, description):
     return expense_id
 
 
+def get_expense_by_id(expense_id, user_id):
+    """Fetches a single expense record by ID belonging to specific user."""
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM expenses WHERE id = ? AND user_id = ?", (expense_id, user_id))
+    expense = cursor.fetchone()
+    conn.close()
+    return expense
+
+
+def update_expense_db(expense_id, user_id, amount, category, date, description):
+    """Updates an existing expense record in SQLite database."""
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute(
+        "UPDATE expenses SET amount = ?, category = ?, date = ?, description = ? WHERE id = ? AND user_id = ?",
+        (amount, category, date, description, expense_id, user_id)
+    )
+    conn.commit()
+    conn.close()
+
+
+def delete_expense_db(expense_id, user_id):
+    """Deletes an expense record from SQLite database."""
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("DELETE FROM expenses WHERE id = ? AND user_id = ?", (expense_id, user_id))
+    conn.commit()
+    conn.close()
+
+
 def get_user_expenses(user_id, month=None, category=None, search=None, start_date=None, end_date=None):
     """Fetches expenses for a user with optional month, category, keyword, and date range filters."""
     conn = get_db()
@@ -99,8 +130,21 @@ def get_user_expenses(user_id, month=None, category=None, search=None, start_dat
     query += " ORDER BY date DESC, id DESC"
     
     cursor.execute(query, params)
-    expenses = cursor.fetchall()
+    rows = cursor.fetchall()
     conn.close()
+
+    # Format dates into human-readable strings e.g. "10 Aug 2026"
+    import datetime
+    expenses = []
+    for r in rows:
+        d_item = dict(r)
+        try:
+            dt_obj = datetime.datetime.strptime(d_item["date"], "%Y-%m-%d")
+            d_item["formatted_date"] = dt_obj.strftime("%d %b %Y")
+        except Exception:
+            d_item["formatted_date"] = d_item["date"]
+        expenses.append(d_item)
+
     return expenses
 
 
