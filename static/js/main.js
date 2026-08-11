@@ -6,6 +6,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     const openBtns = [
         document.getElementById('open-video-btn'),
+        document.getElementById('open-video-nav-btn'),
         document.getElementById('open-video-card-btn'),
         document.getElementById('open-video-cta-btn')
     ];
