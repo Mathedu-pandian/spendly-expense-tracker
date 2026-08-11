@@ -314,29 +314,23 @@
 
                     <div class="spider-chart-wrapper">
                         <div class="spider-svg-container">
-                            <svg viewBox="0 0 240 240" class="spider-svg" id="spider-svg-element">
-                                <polygon points="120,30 183,60 198,128 154,187 86,187 42,128 57,60" fill="none" stroke="var(--border)" stroke-dasharray="3 3"/>
-                                <polygon points="120,60 162,80 172,125 142,165 98,165 68,125 78,80" fill="none" stroke="var(--border-soft)"/>
-                                <polygon points="120,90 141,100 146,122 131,142 109,142 94,122 99,100" fill="none" stroke="var(--border-soft)"/>
+                            <svg viewBox="0 0 240 240" class="spider-svg">
+                                <polygon points="120,45 174,70 187,126 150,175 90,175 53,126 66,70" fill="none" stroke="var(--border)" stroke-dasharray="2 2"/>
+                                <polygon points="120,70 156,87 165,124 140,157 100,157 75,124 84,87" fill="none" stroke="var(--border-soft)"/>
+                                <polygon points="120,95 138,103 142,122 130,138 110,138 98,122 102,103" fill="none" stroke="var(--border-soft)"/>
 
-                                <line x1="120" y1="120" x2="120" y2="30" stroke="var(--border-soft)"/>
-                                <line x1="120" y1="120" x2="183" y2="60" stroke="var(--border-soft)"/>
-                                <line x1="120" y1="120" x2="198" y2="128" stroke="var(--border-soft)"/>
-                                <line x1="120" y1="120" x2="154" y2="187" stroke="var(--border-soft)"/>
-                                <line x1="120" y1="120" x2="86" y2="187" stroke="var(--border-soft)"/>
-                                <line x1="120" y1="120" x2="42" y2="128" stroke="var(--border-soft)"/>
-                                <line x1="120" y1="120" x2="57" y2="60" stroke="var(--border-soft)"/>
+                                {% for node in analytics_summary.spider_nodes %}
+                                <line x1="120" y1="120" x2="{{ node.lbl_x }}" y2="{{ node.lbl_y }}" stroke="var(--border-soft)" stroke-width="1.2"/>
+                                <text x="{{ node.lbl_x }}" y="{{ node.lbl_y }}" text-anchor="middle" dominant-baseline="central" class="spider-axis-lbl">{{ node.category }}</text>
+                                {% endfor %}
 
-                                <text x="120" y="20" text-anchor="middle" class="spider-axis-lbl">Food</text>
-                                <text x="195" y="52" text-anchor="start" class="spider-axis-lbl">Bills</text>
-                                <text x="210" y="132" text-anchor="start" class="spider-axis-lbl">Transport</text>
-                                <text x="162" y="200" text-anchor="middle" class="spider-axis-lbl">Health</text>
-                                <text x="78" y="200" text-anchor="middle" class="spider-axis-lbl">Shopping</text>
-                                <text x="30" y="132" text-anchor="end" class="spider-axis-lbl">Entertainment</text>
-                                <text x="45" y="52" text-anchor="end" class="spider-axis-lbl">Other</text>
+                                <polygon points="{{ analytics_summary.spider_polygon_points }}" fill="rgba(193, 127, 36, 0.32)" stroke="var(--accent-2)" stroke-width="2.5"/>
 
-                                <polygon id="spider-polygon-path" points="" fill="rgba(193, 127, 36, 0.28)" stroke="var(--accent)" stroke-width="2.5"/>
-                                <g id="spider-nodes-group"></g>
+                                {% for node in analytics_summary.spider_nodes %}
+                                <circle cx="{{ node.node_x }}" cy="{{ node.node_y }}" r="4.5" fill="var(--accent-2)" stroke="#ffffff" stroke-width="1.5">
+                                    <title>{{ node.category }}: ₹{{ "%.2f"|format(node.amount) }} ({{ node.score }}% intensity)</title>
+                                </circle>
+                                {% endfor %}
                             </svg>
                         </div>
                     </div>

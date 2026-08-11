@@ -17,6 +17,8 @@ document.addEventListener('DOMContentLoaded', function () {
             const targetEl = document.getElementById(targetId);
             if (targetEl) {
                 targetEl.classList.add('active');
+                if (typeof renderPieChart === 'function') renderPieChart();
+                if (typeof renderSpiderChart === 'function') renderSpiderChart();
             }
         });
     });

@@ -403,16 +403,44 @@ def get_monthly_analytics_summary(user_id, month=None):
         top_cat = max(cat_map, key=cat_map.get)
         top_cat_amount = cat_map[top_cat]
 
+    import math
     max_cat_val = max(cat_map.values(), default=1.0) or 1.0
     spider_nodes = []
-    for cat in all_categories:
+    spider_pts_list = []
+
+    center_x = 120
+    center_y = 120
+    max_r = 75
+
+    for i, cat in enumerate(all_categories):
         amt = cat_map.get(cat, 0.0)
         score = round((amt / max_cat_val) * 100, 1) if max_cat_val > 0 else 0
+        clamped_score = max(10, min(100, score))
+
+        angle = (2 * math.pi * i / 7) - (math.pi / 2)
+        r = max_r * (clamped_score / 100.0)
+
+        node_x = round(center_x + r * math.cos(angle), 1)
+        node_y = round(center_y + r * math.sin(angle), 1)
+
+        # Label position at radius + 22
+        lbl_r = max_r + 24
+        lbl_x = round(center_x + lbl_r * math.cos(angle), 1)
+        lbl_y = round(center_y + lbl_r * math.sin(angle), 1)
+
+        spider_pts_list.append(f"{node_x},{node_y}")
+
         spider_nodes.append({
             "category": cat,
             "amount": amt,
-            "score": max(10, score)
+            "score": clamped_score,
+            "node_x": node_x,
+            "node_y": node_y,
+            "lbl_x": lbl_x,
+            "lbl_y": lbl_y
         })
+
+    spider_polygon_points = " ".join(spider_pts_list)
 
     if top_cat != "None":
         pct_of_total = round((top_cat_amount / cur_total * 100), 1) if cur_total > 0 else 0
@@ -444,6 +472,7 @@ def get_monthly_analytics_summary(user_id, month=None):
         "top_cat": top_cat,
         "top_cat_amount": top_cat_amount,
         "spider_nodes": spider_nodes,
+        "spider_polygon_points": spider_polygon_points,
         "advisory_tip": advisory_tip
     }
 
