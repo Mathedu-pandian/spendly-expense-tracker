@@ -1,50 +1,6 @@
 // main.js — Interactive Video Modal & Hans Zimmer Cornfield Chase Audio Engine
 
 document.addEventListener('DOMContentLoaded', function () {
-    // Segment Tab Switcher Initialization
-    const segmentTabs = document.querySelectorAll('.segment-tab');
-    const tabContents = document.querySelectorAll('.tab-content');
-
-    segmentTabs.forEach(tab => {
-        tab.addEventListener('click', function () {
-            const targetId = this.getAttribute('data-target');
-            if (!targetId) return;
-
-            segmentTabs.forEach(t => t.classList.remove('active'));
-            tabContents.forEach(c => c.classList.remove('active'));
-
-            this.classList.add('active');
-            const targetEl = document.getElementById(targetId);
-            if (targetEl) {
-                targetEl.classList.add('active');
-                if (typeof renderPieChart === 'function') renderPieChart();
-                if (typeof renderSpiderChart === 'function') renderSpiderChart();
-            }
-        });
-    });
-
-    // Theme Toggle Switcher Initialization
-    const themeBtn = document.getElementById('theme-toggle-btn');
-    const themeIcon = document.getElementById('theme-toggle-icon');
-
-    function updateThemeIcon() {
-        const currentTheme = document.documentElement.getAttribute('data-theme');
-        if (themeIcon) {
-            themeIcon.textContent = currentTheme === 'dark' ? '☀️' : '🌙';
-        }
-    }
-    updateThemeIcon();
-
-    if (themeBtn) {
-        themeBtn.addEventListener('click', function () {
-            const currentTheme = document.documentElement.getAttribute('data-theme');
-            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-            document.documentElement.setAttribute('data-theme', newTheme);
-            localStorage.setItem('spendly-theme', newTheme);
-            updateThemeIcon();
-        });
-    }
-
     const modal = document.getElementById('video-modal');
     if (!modal) return;
 

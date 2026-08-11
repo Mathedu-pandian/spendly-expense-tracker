@@ -1,544 +1,441 @@
 {% extends "base.html" %}
 
-{% block title %}Executive Expense Dashboard — Spendly{% endblock %}
+{% block title %}Expense Dashboard & Analytics — Spendly{% endblock %}
 
 {% block content %}
 <section class="dashboard-section">
     <div class="dashboard-container">
         
-        <!-- Hero Header -->
-        <div class="dashboard-hero-header">
+        <!-- Header & Top Actions -->
+        <div class="dashboard-header">
             <div>
-                <div class="user-greeting-badge">
-                    <span class="pulse-dot"></span> Active Session
-                </div>
                 <h1 class="dashboard-title">Welcome back, {{ g.user.name.split()[0] }}</h1>
-                <p class="dashboard-subtitle">Complete control over your personal finances, monthly targets & analytics</p>
+                <p class="dashboard-subtitle">Custom Time Tracking, Inter-Category Matrix & Financial Analytics</p>
             </div>
-
             <div class="dashboard-top-actions">
-                <a href="{{ url_for('budgets') }}" class="btn-ghost">🎯 Budget Targets</a>
+                <a href="{{ url_for('profile') }}" class="btn-ghost">View Profile</a>
                 <a href="{{ url_for('add_expense') }}" class="btn-primary">+ Add Expense</a>
             </div>
         </div>
 
-        <!-- Segment Control Tab Switcher -->
-        <div class="segment-tab-container">
-            <button type="button" class="segment-tab active" data-target="tab-overview">
-                📊 Overview & History
-            </button>
-            <button type="button" class="segment-tab" data-target="tab-analytics">
-                📈 Visual Charts & Matrix
-            </button>
-            <button type="button" class="segment-tab" data-target="tab-budgets">
-                🎯 Budgets & Dual Radar
-                {% if budget_perf and budget_perf.alert_count > 0 %}
-                <span class="tab-badge-alert">{{ budget_perf.alert_count }}</span>
-                {% endif %}
-            </button>
+        <!-- Custom Time Tracker Bar Card -->
+        <div class="dashboard-card time-tracker-card">
+            <div class="card-header-flex" style="margin-bottom: 1rem;">
+                <div>
+                    <h2 class="card-title" style="margin-bottom: 0.2rem;">Custom Time Tracker</h2>
+                    <p class="card-sub" style="margin-bottom: 0;">Filter analytics and records by exact custom date range</p>
+                </div>
+                <span class="analytics-badge" style="background: rgba(52, 152, 219, 0.15); color: #3498db;">⏱️ Custom Range</span>
+            </div>
+
+            <form method="GET" action="{{ url_for('dashboard') }}" class="time-tracker-form">
+                <input type="hidden" name="category" value="{{ selected_category }}">
+                <input type="hidden" name="search" value="{{ selected_search }}">
+                
+                <div class="time-tracker-grid">
+                    <div class="date-input-group">
+                        <label for="start_date">Start Date</label>
+                        <input type="date" id="start_date" name="start_date" value="{{ selected_start_date }}" class="form-input">
+                    </div>
+
+                    <div class="date-input-group">
+                        <label for="end_date">End Date</label>
+                        <input type="date" id="end_date" name="end_date" value="{{ selected_end_date }}" class="form-input">
+                    </div>
+
+                    <div class="time-tracker-actions">
+                        <button type="submit" class="btn-primary" style="padding: 0.6rem 1.25rem;">Apply Range</button>
+                        {% if selected_start_date or selected_end_date %}
+                        <a href="{{ url_for('dashboard', month=selected_month, category=selected_category) }}" class="btn-ghost clear-filter-btn">Reset Time</a>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Quick Date Presets -->
+                <div class="time-presets">
+                    <span class="preset-label">Quick Presets:</span>
+                    <a href="{{ url_for('dashboard', start_date='2026-08-03', end_date='2026-08-10') }}" class="preset-pill">⚡ Last 7 Days</a>
+                    <a href="{{ url_for('dashboard', start_date='2026-07-11', end_date='2026-08-10') }}" class="preset-pill">⚡ Last 30 Days</a>
+                    <a href="{{ url_for('dashboard', start_date='2026-05-10', end_date='2026-08-10') }}" class="preset-pill">⚡ Last 90 Days</a>
+                    <a href="{{ url_for('dashboard', start_date='2026-01-01', end_date='2026-12-31') }}" class="preset-pill">⚡ YTD 2026</a>
+                </div>
+            </form>
         </div>
 
-        <!-- TAB 1: OVERVIEW & TRANSACTIONS -->
-        <div id="tab-overview" class="tab-content active">
-            
-            <!-- Metric Cards Grid -->
-            <div class="metrics-grid">
-                <div class="metric-card">
-                    <span class="metric-icon">💳</span>
-                    <div class="metric-info">
-                        <span class="metric-label">
-                            {% if selected_start_date or selected_end_date %}
-                                Spent (Custom Range)
-                            {% elif selected_month != 'All' %}
-                                Spent in {{ analytics_summary.month_label }}
-                            {% else %}
-                                Total Spent
-                            {% endif %}
-                        </span>
-                        <span class="metric-value">₹{{ "%.2f"|format(summary.total_spent) }}</span>
-                    </div>
-                </div>
-
-                <div class="metric-card">
-                    <span class="metric-icon">📝</span>
-                    <div class="metric-info">
-                        <span class="metric-label">Transactions</span>
-                        <span class="metric-value">{{ summary.total_count }} Records</span>
-                    </div>
-                </div>
-
-                <div class="metric-card">
-                    <span class="metric-icon">🏷️</span>
-                    <div class="metric-info">
-                        <span class="metric-label">Top Category</span>
-                        <span class="metric-value">{{ summary.top_category }}</span>
-                    </div>
-                </div>
-
-                <div class="metric-card">
-                    <span class="metric-icon">🎯</span>
-                    <div class="metric-info">
-                        <span class="metric-label">Budget Status</span>
-                        <span class="metric-value" style="color: {% if budget_perf.alert_count > 0 %}#e74c3c{% else %}#27ae60{% endif %};">
-                            {% if budget_perf.alert_count > 0 %}
-                                {{ budget_perf.alert_count }} Alert{% if budget_perf.alert_count > 1 %}s{% endif %}
-                            {% else %}
-                                🟢 On Track
-                            {% endif %}
-                        </span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Custom Time Tracker Bar -->
-            <div class="dashboard-card time-tracker-card">
-                <div class="card-header-flex" style="margin-bottom: 1rem;">
-                    <div>
-                        <h2 class="card-title" style="margin-bottom: 0.2rem;">Custom Time Tracker</h2>
-                        <p class="card-sub">Filter analytics and records by exact custom date range</p>
-                    </div>
-                    <span class="analytics-badge" style="background: rgba(52, 152, 219, 0.12); color: #3498db;">⏱️ Custom Date Filter</span>
-                </div>
-
-                <form method="GET" action="{{ url_for('dashboard') }}" class="time-tracker-form">
-                    <input type="hidden" name="category" value="{{ selected_category }}">
-                    <input type="hidden" name="search" value="{{ selected_search }}">
-                    
-                    <div class="time-tracker-grid">
-                        <div class="date-input-group">
-                            <label for="start_date">Start Date</label>
-                            <input type="date" id="start_date" name="start_date" value="{{ selected_start_date }}" class="form-input">
-                        </div>
-
-                        <div class="date-input-group">
-                            <label for="end_date">End Date</label>
-                            <input type="date" id="end_date" name="end_date" value="{{ selected_end_date }}" class="form-input">
-                        </div>
-
-                        <div class="time-tracker-actions">
-                            <button type="submit" class="btn-primary" style="padding: 0.6rem 1.25rem;">Apply Range</button>
-                            {% if selected_start_date or selected_end_date %}
-                            <a href="{{ url_for('dashboard', month=selected_month, category=selected_category) }}" class="btn-ghost clear-filter-btn">Reset Time</a>
-                            {% endif %}
-                        </div>
-                    </div>
-
-                    <div class="time-presets">
-                        <span class="preset-label">Quick Presets:</span>
-                        <a href="{{ url_for('dashboard', start_date='2026-08-03', end_date='2026-08-10') }}" class="preset-pill">⚡ Last 7 Days</a>
-                        <a href="{{ url_for('dashboard', start_date='2026-07-11', end_date='2026-08-10') }}" class="preset-pill">⚡ Last 30 Days</a>
-                        <a href="{{ url_for('dashboard', start_date='2026-05-10', end_date='2026-08-10') }}" class="preset-pill">⚡ Last 90 Days</a>
-                        <a href="{{ url_for('dashboard', start_date='2026-01-01', end_date='2026-12-31') }}" class="preset-pill">⚡ YTD 2026</a>
-                    </div>
-                </form>
-            </div>
-
-            <!-- Expense History & Filter Section -->
-            <div class="dashboard-card history-card">
-                <div class="card-header-flex">
-                    <div>
-                        <h2 class="card-title">Expense History</h2>
-                        <p class="card-sub">Showing {{ expenses|length }} transaction{% if expenses|length != 1 %}s{% endif %}</p>
-                    </div>
-                    
-                    <form method="GET" action="{{ url_for('dashboard') }}" class="filter-form">
-                        <input type="hidden" name="start_date" value="{{ selected_start_date }}">
-                        <input type="hidden" name="end_date" value="{{ selected_end_date }}">
-
-                        <div class="filter-controls">
-                            <!-- Month Filter Dropdown -->
-                            <select name="month" class="filter-select" onchange="this.form.submit()">
-                                <option value="All" {% if selected_month == 'All' %}selected{% endif %}>📅 All Months</option>
-                                {% for m in available_months %}
-                                <option value="{{ m.value }}" {% if selected_month == m.value %}selected{% endif %}>{{ m.label }}</option>
-                                {% endfor %}
-                            </select>
-
-                            <!-- Category Filter Dropdown -->
-                            <select name="category" class="filter-select" onchange="this.form.submit()">
-                                <option value="All" {% if selected_category == 'All' %}selected{% endif %}>All Categories</option>
-                                <option value="Food" {% if selected_category == 'Food' %}selected{% endif %}>Food</option>
-                                <option value="Bills" {% if selected_category == 'Bills' %}selected{% endif %}>Bills</option>
-                                <option value="Transport" {% if selected_category == 'Transport' %}selected{% endif %}>Transport</option>
-                                <option value="Health" {% if selected_category == 'Health' %}selected{% endif %}>Health</option>
-                                <option value="Shopping" {% if selected_category == 'Shopping' %}selected{% endif %}>Shopping</option>
-                                <option value="Entertainment" {% if selected_category == 'Entertainment' %}selected{% endif %}>Entertainment</option>
-                                <option value="Other" {% if selected_category == 'Other' %}selected{% endif %}>Other</option>
-                            </select>
-
-                            <!-- Search Input -->
-                            <div class="search-input-wrapper">
-                                <input type="text" name="search" value="{{ selected_search }}" placeholder="Search description..." class="filter-search-input">
-                                <button type="submit" class="search-btn">🔍</button>
-                            </div>
-
-                            {% if selected_month != 'All' or selected_category != 'All' or selected_search %}
-                            <a href="{{ url_for('dashboard') }}" class="clear-filters-link">Clear</a>
-                            {% endif %}
-                        </div>
-                    </form>
-                </div>
-
-                {% if expenses %}
-                <div class="table-wrapper">
-                    <table class="expense-table">
-                        <thead>
-                            <tr>
-                                <th>Date</th>
-                                <th>Category</th>
-                                <th>Description / Merchant</th>
-                                <th class="text-right">Amount</th>
-                                <th class="text-center">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for item in expenses %}
-                            <tr>
-                                <td class="date-cell">{{ item.formatted_date or item.date }}</td>
-                                <td>
-                                    <span class="cat-pill cat-pill-{{ item.category.lower() }}">
-                                        {% if item.category == 'Food' %}🍔
-                                        {% elif item.category == 'Bills' %}⚡
-                                        {% elif item.category == 'Transport' %}🚗
-                                        {% elif item.category == 'Health' %}💊
-                                        {% elif item.category == 'Shopping' %}🛍️
-                                        {% elif item.category == 'Entertainment' %}🎬
-                                        {% else %}📦
-                                        {% endif %}
-                                        {{ item.category }}
-                                    </span>
-                                </td>
-                                <td class="desc-cell">{{ item.description or '—' }}</td>
-                                <td class="amount-cell text-right">₹{{ "%.2f"|format(item.amount) }}</td>
-                                <td class="actions-cell text-center">
-                                    <div class="table-actions">
-                                        <a href="{{ url_for('edit_expense', id=item.id) }}" class="btn-action-edit" title="Edit Transaction">✏️</a>
-                                        <form method="POST" action="{{ url_for('delete_expense', id=item.id) }}" class="delete-form-inline" onsubmit="return confirm('Are you sure you want to delete this ₹{{ item.amount }} expense?');">
-                                            <button type="submit" class="btn-action-delete" title="Delete Transaction">🗑️</button>
-                                        </form>
-                                    </div>
-                                </td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-                {% else %}
-                <div class="empty-state">
-                    <div class="empty-icon">💸</div>
-                    <h3>No Expenses Found</h3>
-                    <p>No transactions match your selected date range or category filters.</p>
-                    <a href="{{ url_for('add_expense') }}" class="btn-primary" style="margin-top: 1rem;">+ Add Expense</a>
-                </div>
-                {% endif %}
-            </div>
-
-        </div>
-
-        <!-- TAB 2: VISUAL CHARTS & ANALYTICS -->
-        <div id="tab-analytics" class="tab-content">
-            
-            <!-- 7-Month Monthly Trend Bar Chart -->
-            {% if monthly_trends %}
-            <div class="dashboard-card trends-card">
-                <div class="card-header-flex">
-                    <div>
-                        <h2 class="card-title">7-Month Spending Trend</h2>
-                        <p class="card-sub">Monthly expenditure trajectory</p>
-                    </div>
-                    <span class="analytics-badge">📊 7-Month Dataset</span>
-                </div>
-
-                <div class="trends-chart-container">
-                    {% for trend in monthly_trends %}
-                    <div class="trend-bar-wrapper">
-                        <span class="bar-amount">₹{{ "%.0f"|format(trend.total) }}</span>
-                        <div class="bar-track">
-                            <div class="bar-fill {% if selected_month == trend.month_val %}active-bar{% endif %}" style="height: {{ trend.height_pct }}%;"></div>
-                        </div>
-                        <a href="{{ url_for('dashboard', month=trend.month_val) }}" class="bar-label {% if selected_month == trend.month_val %}active-label{% endif %}">
-                            {{ trend.month_label }}
-                        </a>
-                    </div>
-                    {% endfor %}
-                </div>
-            </div>
-            {% endif %}
-
-            <!-- Category Breakdowns Grid (Pie Chart + Spidergraph) -->
-            <div class="analytics-grid">
-                <!-- SVG Category Donut Pie Chart -->
-                <div class="dashboard-card chart-card">
-                    <div class="card-header-flex">
-                        <div>
-                            <h2 class="card-title">Category Breakdown (Pie Chart)</h2>
-                            <p class="card-sub">Proportional spending distribution</p>
-                        </div>
-                    </div>
-
-                    <div class="pie-chart-wrapper">
-                        <div class="pie-svg-container">
-                            <svg viewBox="0 0 200 200" class="donut-svg">
-                                <circle cx="100" cy="100" r="70" class="donut-bg-ring"/>
-                                <g id="pie-segments-group"></g>
-                            </svg>
-                            <div class="donut-center-info">
-                                <span class="donut-total-lbl">Total</span>
-                                <span class="donut-total-val">₹{{ "%.0f"|format(summary.total_spent) }}</span>
-                            </div>
-                        </div>
-
-                        <div class="pie-legend-list">
-                            {% for cat in category_totals %}
-                            <div class="pie-legend-item" data-cat="{{ cat.category.lower() }}" data-pct="{{ cat.percentage }}" data-amount="{{ cat.total }}">
-                                <div class="legend-color-dot cat-dot-{{ cat.category.lower() }}"></div>
-                                <div class="legend-info">
-                                    <span class="legend-cat-name">{{ cat.category }}</span>
-                                    <span class="legend-amount">₹{{ "%.2f"|format(cat.total) }} ({{ cat.percentage }}%)</span>
-                                </div>
-                            </div>
-                            {% endfor %}
-                        </div>
-                    </div>
-                </div>
-
-                <!-- SVG 7-Axis Spidergraph (Radar Chart) -->
-                <div class="dashboard-card chart-card">
-                    <div class="card-header-flex">
-                        <div>
-                            <h2 class="card-title">Spending Intensity Balance</h2>
-                            <p class="card-sub">7-Axis Radar Chart comparing category load</p>
-                        </div>
-                        <span class="analytics-badge" style="background: rgba(193, 127, 36, 0.15); color: var(--accent);">🕸️ Radar Matrix</span>
-                    </div>
-
-                    <div class="spider-chart-wrapper">
-                        <div class="spider-svg-container">
-                            <svg viewBox="0 0 240 240" class="spider-svg">
-                                <polygon points="120,45 174,70 187,126 150,175 90,175 53,126 66,70" fill="none" stroke="var(--border)" stroke-dasharray="2 2"/>
-                                <polygon points="120,70 156,87 165,124 140,157 100,157 75,124 84,87" fill="none" stroke="var(--border-soft)"/>
-                                <polygon points="120,95 138,103 142,122 130,138 110,138 98,122 102,103" fill="none" stroke="var(--border-soft)"/>
-
-                                {% for node in analytics_summary.spider_nodes %}
-                                <line x1="120" y1="120" x2="{{ node.lbl_x }}" y2="{{ node.lbl_y }}" stroke="var(--border-soft)" stroke-width="1.2"/>
-                                <text x="{{ node.lbl_x }}" y="{{ node.lbl_y }}" text-anchor="middle" dominant-baseline="central" class="spider-axis-lbl">{{ node.category }}</text>
-                                {% endfor %}
-
-                                <polygon points="{{ analytics_summary.spider_polygon_points }}" fill="rgba(193, 127, 36, 0.32)" stroke="var(--accent-2)" stroke-width="2.5"/>
-
-                                {% for node in analytics_summary.spider_nodes %}
-                                <circle cx="{{ node.node_x }}" cy="{{ node.node_y }}" r="4.5" fill="var(--accent-2)" stroke="#ffffff" stroke-width="1.5">
-                                    <title>{{ node.category }}: ₹{{ "%.2f"|format(node.amount) }} ({{ node.score }}% intensity)</title>
-                                </circle>
-                                {% endfor %}
-                            </svg>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Inter-Category Statistics Matrix Across Months -->
-            {% if inter_category_stats and inter_category_stats.matrix_rows %}
-            <div class="dashboard-card inter-matrix-card">
-                <div class="card-header-flex">
-                    <div>
-                        <h2 class="card-title">Inter-Category Statistics Matrix</h2>
-                        <p class="card-sub">Cross-tabulation of category spending across months with peak month highlighting</p>
-                    </div>
-                    <span class="analytics-badge" style="background: rgba(46, 204, 113, 0.15); color: #27ae60;">📈 Cross-Category Analysis</span>
-                </div>
-
-                <div class="inter-highlights-grid">
-                    <div class="inter-stat-badge">
-                        <span class="inter-stat-icon">👑</span>
-                        <div>
-                            <span class="inter-stat-label">Highest Avg Category</span>
-                            <span class="inter-stat-val">{{ inter_category_stats.highest_avg_cat }} (₹{{ "%.2f"|format(inter_category_stats.highest_avg_amount) }}/mo)</span>
-                        </div>
-                    </div>
-
-                    <div class="inter-stat-badge">
-                        <span class="inter-stat-icon">🚀</span>
-                        <div>
-                            <span class="inter-stat-label">Fastest Growing Category</span>
-                            <span class="inter-stat-val">{{ inter_category_stats.growth_cat }} (+{{ inter_category_stats.growth_pct }}%)</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="table-wrapper">
-                    <table class="inter-matrix-table">
-                        <thead>
-                            <tr>
-                                <th>Category</th>
-                                {% for m_hdr in inter_category_stats.months_header %}
-                                <th class="text-right">{{ m_hdr }}</th>
-                                {% endfor %}
-                                <th class="text-right">Total</th>
-                                <th class="text-right">Monthly Avg</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for row in inter_category_stats.matrix_rows %}
-                            <tr>
-                                <td><span class="cat-pill cat-pill-{{ row.category.lower() }}">{{ row.category }}</span></td>
-                                {% for m_val in row.month_values %}
-                                <td class="matrix-cell {% if m_val.is_peak %}matrix-peak-cell{% endif %}">
-                                    ₹{{ "%.0f"|format(m_val.amount) }}
-                                </td>
-                                {% endfor %}
-                                <td class="matrix-total-cell">₹{{ "%.0f"|format(row.total) }}</td>
-                                <td class="matrix-avg-cell">₹{{ "%.0f"|format(row.avg) }}</td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-            {% endif %}
-
-            <!-- End-of-Month Financial Insights Advisory Card -->
-            <div class="dashboard-card advisory-card">
-                <div class="card-header-flex">
-                    <div>
-                        <h2 class="card-title">End-of-Month Advisory & MoM Insights</h2>
-                        <p class="card-sub">Automated financial analysis for {{ analytics_summary.month_label }}</p>
-                    </div>
-                </div>
-
-                <div class="advisory-content-grid">
-                    <div class="advisory-metrics-row">
-                        <div class="advisory-metric">
-                            <span class="adv-label">MoM Delta</span>
-                            <span class="adv-val {{ analytics_summary.mom_direction }}">
-                                {% if analytics_summary.mom_direction == 'up' %}▲{% else %}▼{% endif %} {{ analytics_summary.mom_pct }}%
-                            </span>
-                        </div>
-                        <div class="advisory-metric">
-                            <span class="adv-label">Daily Average</span>
-                            <span class="adv-val">₹{{ "%.2f"|format(analytics_summary.daily_avg) }}/day</span>
-                        </div>
-                        <div class="advisory-metric">
-                            <span class="adv-label">Top Expense</span>
-                            <span class="adv-val">{{ analytics_summary.top_cat }}</span>
-                        </div>
-                    </div>
-
-                    <div class="advisory-tip-box">
-                        <span class="tip-icon">💡</span>
-                        <div class="tip-text">
-                            <strong>Smart Advisory:</strong> {{ analytics_summary.advisory_tip | safe }}
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-        </div>
-
-        <!-- TAB 3: BUDGETS & DUAL RADAR -->
-        <div id="tab-budgets" class="tab-content">
-            
-            <!-- Active 50% & 75% Budget Threshold Reminders Banner -->
-            {% if budget_perf and budget_perf.active_alerts %}
-            <div class="dashboard-card alerts-banner-card">
-                <div class="card-header-flex">
-                    <div>
-                        <h2 class="card-title" style="color: var(--ink);">Threshold Reminders & Budget Warnings</h2>
-                        <p class="card-sub">Active category budget notifications for {{ budget_perf.target_month }}</p>
-                    </div>
-                    <span class="analytics-badge" style="background: rgba(231, 76, 60, 0.15); color: #e74c3c;">
-                        🔔 {{ budget_perf.alert_count }} Active Alert{% if budget_perf.alert_count > 1 %}s{% endif %}
+        <!-- Metric Summary Cards Grid -->
+        <div class="metrics-grid">
+            <div class="metric-card">
+                <span class="metric-icon">💳</span>
+                <div class="metric-info">
+                    <span class="metric-label">
+                        {% if selected_start_date or selected_end_date %}
+                            Spent (Custom Range)
+                        {% elif selected_month != 'All' %}
+                            Spent in {{ analytics_summary.month_label }}
+                        {% else %}
+                            Total Spent (7 Months)
+                        {% endif %}
                     </span>
-                </div>
-
-                <div class="alerts-list">
-                    {% for alert in budget_perf.active_alerts %}
-                    <div class="alert-banner-item alert-{{ alert.level }}">
-                        <div class="alert-item-header">
-                            <span class="cat-pill cat-pill-{{ alert.category.lower() }}">{{ alert.category }}</span>
-                            <span class="alert-badge alert-badge-{{ alert.level }}">{{ alert.badge }}</span>
-                        </div>
-                        <p class="alert-msg-text">{{ alert.msg }}</p>
-                        <div class="alert-progress-track">
-                            <div class="alert-progress-fill alert-fill-{{ alert.level }}" style="width: {{ alert.percentage if alert.percentage <= 100 else 100 }}%;"></div>
-                        </div>
-                    </div>
-                    {% endfor %}
+                    <span class="metric-value">₹{{ "%.2f"|format(summary.total_spent) }}</span>
                 </div>
             </div>
-            {% endif %}
 
-            <!-- Dual 7-Axis Spidergraph: Budget Target vs Actual Expense -->
-            <div class="dashboard-card dual-spidergraph-card">
-                <div class="card-header-flex">
-                    <div>
-                        <h2 class="card-title">Parallel Visualization: Budget Target vs. Actual Expense</h2>
-                        <p class="card-sub">7-Axis Radar Overlay comparing planned targets against actual spending in {{ budget_perf.target_month }}</p>
+            <div class="metric-card">
+                <span class="metric-icon">📝</span>
+                <div class="metric-info">
+                    <span class="metric-label">Transactions</span>
+                    <span class="metric-value">{{ summary.total_count }} Records</span>
+                </div>
+            </div>
+
+            <div class="metric-card">
+                <span class="metric-icon">🏷️</span>
+                <div class="metric-info">
+                    <span class="metric-label">Top Category</span>
+                    <span class="metric-value">{{ summary.top_category }}</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Active 50% & 75% Budget Threshold Reminders Banner -->
+        {% if budget_perf and budget_perf.active_alerts %}
+        <div class="dashboard-card alerts-banner-card">
+            <div class="card-header-flex">
+                <div>
+                    <h2 class="card-title" style="color: var(--ink);">Threshold Reminders & Budget Warnings</h2>
+                    <p class="card-sub">Active category budget notifications for {{ budget_perf.target_month }}</p>
+                </div>
+                <a href="{{ url_for('budgets') }}" class="analytics-badge" style="background: rgba(231, 76, 60, 0.15); color: #e74c3c; text-decoration: none;">
+                    🔔 {{ budget_perf.alert_count }} Active Alert{% if budget_perf.alert_count > 1 %}s{% endif %} (Manage Budgets →)
+                </a>
+            </div>
+
+            <div class="alerts-list">
+                {% for alert in budget_perf.active_alerts %}
+                <div class="alert-banner-item alert-{{ alert.level }}">
+                    <div class="alert-item-header">
+                        <span class="cat-pill cat-pill-{{ alert.category.lower() }}">{{ alert.category }}</span>
+                        <span class="alert-badge alert-badge-{{ alert.level }}">{{ alert.badge }}</span>
                     </div>
-                    <div class="radar-legend-container">
-                        <span class="radar-legend-item legend-budget"><span class="legend-dot dot-budget"></span> Planned Target</span>
-                        <span class="radar-legend-item legend-expense"><span class="legend-dot dot-expense"></span> Actual Expense</span>
+                    <p class="alert-msg-text">{{ alert.msg }}</p>
+                    <div class="alert-progress-track">
+                        <div class="alert-progress-fill alert-fill-{{ alert.level }}" style="width: {{ alert.percentage if alert.percentage <= 100 else 100 }}%;"></div>
                     </div>
                 </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
 
-                <div class="dual-radar-wrapper">
-                    <div class="dual-radar-svg-container">
-                        <svg viewBox="0 0 300 300" class="dual-radar-svg">
-                            <polygon points="150,50 221.5,84.4 239.1,162.2 189.1,228.4 110.9,228.4 60.9,162.2 78.5,84.4" fill="none" stroke="var(--border)" stroke-dasharray="2 2"/>
-                            <polygon points="150,75 203.6,100.8 216.8,159.2 179.3,208.8 120.7,208.8 83.2,159.2 96.4,100.8" fill="none" stroke="var(--border-soft)"/>
-                            <polygon points="150,100 185.7,117.2 194.5,156.1 169.5,189.2 130.5,189.2 105.5,156.1 114.3,117.2" fill="none" stroke="var(--border-soft)"/>
+        <!-- 7-Month Analytics Trend Bar Chart -->
+        {% if monthly_trends %}
+        <div class="dashboard-card trends-card">
+            <div class="card-header-flex">
+                <div>
+                    <h2 class="card-title">7-Month Monthly Analytics Trend</h2>
+                    <p class="card-sub">Visual spending analysis across the past 7 months</p>
+                </div>
+                <span class="analytics-badge">📊 Monthly Timeline</span>
+            </div>
 
-                            {% for node in budget_perf.radar_nodes %}
-                            <line x1="150" y1="150" x2="{{ node.lbl_x }}" y2="{{ node.lbl_y }}" stroke="var(--border-soft)" stroke-width="1.2"/>
-                            <text x="{{ node.lbl_x }}" y="{{ node.lbl_y }}" text-anchor="middle" dominant-baseline="central" class="radar-axis-text">{{ node.category }}</text>
+            <div class="trends-bar-chart">
+                {% for m in monthly_trends %}
+                <a href="{{ url_for('dashboard', month=m.month_value, category=selected_category) }}"
+                   class="trend-column {% if selected_month == m.month_value or (selected_month == 'All' and m.month_value == analytics_summary.target_month) %}active-column{% endif %}"
+                   title="{{ m.month_label }}: ₹{{ '%.2f'|format(m.total) }} ({{ m.count }} expenses)">
+                    
+                    <div class="trend-bar-wrapper">
+                        <span class="trend-amount-tooltip">₹{{ "%.0f"|format(m.total) }}</span>
+                        <div class="trend-bar-fill" style="height: {{ m.height_pct }}%;"></div>
+                    </div>
+                    <span class="trend-month-label">{{ m.month_label }}</span>
+                </a>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Interactive Visual Analytics Row: Pie Chart & Spidergraph Radar Chart -->
+        <div class="analytics-charts-grid">
+            
+            <!-- Category Distribution SVG Pie / Donut Chart -->
+            <div class="dashboard-card chart-card">
+                <div class="card-header-flex">
+                    <div>
+                        <h2 class="card-title">Category Pie Chart</h2>
+                        <p class="card-sub">Expenditure distribution share</p>
+                    </div>
+                    <span class="analytics-badge" style="background: rgba(46, 204, 113, 0.15); color: #2ecc71;">🥧 Pie View</span>
+                </div>
+
+                <div class="pie-chart-container">
+                    {% if category_totals %}
+                    <div class="pie-chart-flex">
+                        <div class="pie-svg-wrapper">
+                            <svg id="category-pie-svg" viewBox="0 0 200 200" class="pie-svg">
+                                <!-- Rendered dynamically via JS script below -->
+                            </svg>
+                            <div class="pie-center-hole">
+                                <span class="pie-center-label">Total</span>
+                                <span class="pie-center-val">₹{{ "%.0f"|format(summary.total_spent) }}</span>
+                            </div>
+                        </div>
+
+                        <div class="pie-legend">
+                            {% for cat in category_totals %}
+                            <div class="legend-item" data-category="{{ cat.category }}">
+                                <span class="legend-dot cat-pill-{{ cat.category.lower() }}"></span>
+                                <span class="legend-name">{{ cat.category }}</span>
+                                <span class="legend-pct">{{ cat.percentage }}%</span>
+                                <span class="legend-amount">₹{{ "%.0f"|format(cat.total) }}</span>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% else %}
+                    <p class="empty-text">No category data to plot pie chart.</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Category Intensity Spidergraph (Radar Chart) -->
+            <div class="dashboard-card chart-card">
+                <div class="card-header-flex">
+                    <div>
+                        <h2 class="card-title">Category Spidergraph</h2>
+                        <p class="card-sub">Radar balance across 7 spending dimensions</p>
+                    </div>
+                    <span class="analytics-badge" style="background: rgba(155, 89, 182, 0.15); color: #9b59b6;">🕸️ Radar View</span>
+                </div>
+
+                <div class="radar-chart-container">
+                    <div class="radar-svg-wrapper">
+                        <svg viewBox="0 0 240 240" class="spider-svg" style="max-width: 280px; margin: 0 auto; display: block;">
+                            <polygon points="120,45 174,70 187,126 150,175 90,175 53,126 66,70" fill="none" stroke="var(--border)" stroke-dasharray="2 2"/>
+                            <polygon points="120,70 156,87 165,124 140,157 100,157 75,124 84,87" fill="none" stroke="var(--border-soft)"/>
+                            <polygon points="120,95 138,103 142,122 130,138 110,138 98,122 102,103" fill="none" stroke="var(--border-soft)"/>
+
+                            {% for node in analytics_summary.spider_nodes %}
+                            <line x1="120" y1="120" x2="{{ node.lbl_x }}" y2="{{ node.lbl_y }}" stroke="var(--border-soft)" stroke-width="1.2"/>
+                            <text x="{{ node.lbl_x }}" y="{{ node.lbl_y }}" text-anchor="middle" dominant-baseline="central" class="spider-axis-lbl" style="font-size: 9px; fill: var(--ink);">{{ node.category }}</text>
                             {% endfor %}
 
-                            <polygon points="{{ budget_perf.budget_polygon_points }}" fill="rgba(52, 152, 219, 0.18)" stroke="#3498db" stroke-width="2" stroke-dasharray="4 3"/>
-                            <polygon points="{{ budget_perf.expense_polygon_points }}" fill="rgba(230, 126, 34, 0.35)" stroke="#e67e22" stroke-width="2.5"/>
+                            <polygon points="{{ analytics_summary.spider_polygon_points }}" fill="rgba(193, 127, 36, 0.32)" stroke="var(--accent-2)" stroke-width="2.5"/>
 
-                            {% for node in budget_perf.radar_nodes %}
-                            <circle cx="{{ node.plan_x }}" cy="{{ node.plan_y }}" r="4" fill="#3498db" stroke="#ffffff" stroke-width="1.5">
-                                <title>{{ node.category }} Planned Target: ₹{{ "%.2f"|format(node.limit) }}</title>
-                            </circle>
-                            <circle cx="{{ node.spent_x }}" cy="{{ node.spent_y }}" r="5" fill="{% if node.spent > node.limit %}#e74c3c{% else %}#e67e22{% endif %}" stroke="#ffffff" stroke-width="2">
-                                <title>{{ node.category }} Actual Spent: ₹{{ "%.2f"|format(node.spent) }} ({{ node.pct }}% of target)</title>
+                            {% for node in analytics_summary.spider_nodes %}
+                            <circle cx="{{ node.node_x }}" cy="{{ node.node_y }}" r="4.5" fill="var(--accent-2)" stroke="#ffffff" stroke-width="1.5">
+                                <title>{{ node.category }}: ₹{{ "%.2f"|format(node.amount) }} ({{ node.score }}% intensity)</title>
                             </circle>
                             {% endfor %}
                         </svg>
                     </div>
+                </div>
+            </div>
 
-                    <div class="parallel-breakdown-panel">
-                        <h3 class="parallel-title">Category Parallel Comparison</h3>
-                        <div class="parallel-grid">
-                            {% for node in budget_perf.radar_nodes %}
-                            <div class="parallel-card parallel-border-{{ node.level }}">
-                                <span class="cat-pill cat-pill-{{ node.category.lower() }}">{{ node.category }}</span>
-                                <div class="parallel-num-row">
-                                    <span class="lbl-plan">Target: ₹{{ "%.0f"|format(node.limit) }}</span>
-                                    <span class="lbl-actual {% if node.spent > node.limit %}text-exceeded{% endif %}">Actual: ₹{{ "%.0f"|format(node.spent) }}</span>
-                                </div>
-                                <span class="pct-badge pct-{{ node.level }}">{{ node.pct }}%</span>
-                            </div>
-                            {% endfor %}
-                        </div>
+        </div>
+
+        <!-- Inter-Category Statistics Across Months Matrix -->
+        {% if inter_category_stats and inter_category_stats.matrix_rows %}
+        <div class="dashboard-card inter-category-card">
+            <div class="card-header-flex">
+                <div>
+                    <h2 class="card-title">Inter-Category Statistics Across Months</h2>
+                    <p class="card-sub">Cross-tabulated monthly category matrix & expenditure trend highlights</p>
+                </div>
+                <span class="analytics-badge" style="background: rgba(41, 128, 185, 0.15); color: #2980b9;">📈 Inter-Category Matrix</span>
+            </div>
+
+            <!-- Inter-Category Summary Highlights -->
+            <div class="inter-highlights-grid">
+                <div class="inter-stat-badge">
+                    <span class="inter-stat-icon">👑</span>
+                    <div>
+                        <span class="inter-stat-label">Highest Avg Category</span>
+                        <span class="inter-stat-val">{{ inter_category_stats.highest_avg_cat }} (₹{{ "%.2f"|format(inter_category_stats.highest_avg_amount) }}/mo)</span>
+                    </div>
+                </div>
+
+                <div class="inter-stat-badge">
+                    <span class="inter-stat-icon">🚀</span>
+                    <div>
+                        <span class="inter-stat-label">Fastest Growing Category</span>
+                        <span class="inter-stat-val">{{ inter_category_stats.growth_cat }} (+{{ inter_category_stats.growth_pct }}% growth)</span>
                     </div>
                 </div>
             </div>
 
-            <!-- Link to full Budget Planner Editor -->
-            <div class="dashboard-card" style="text-align: center; padding: 2rem;">
-                <h3>Need to adjust your monthly category targets?</h3>
-                <p style="color: var(--ink-muted); margin-bottom: 1.25rem;">Fine-tune your planned expenditure limits for each variable category.</p>
-                <a href="{{ url_for('budgets') }}" class="btn-primary">Manage Category Budget Targets →</a>
+            <!-- Matrix Table -->
+            <div class="table-responsive">
+                <table class="inter-matrix-table">
+                    <thead>
+                        <tr>
+                            <th>Category</th>
+                            {% for m in inter_category_stats.months_header %}
+                            <th style="text-align: right;">{{ m.label }}</th>
+                            {% endfor %}
+                            <th style="text-align: right;">Total</th>
+                            <th style="text-align: right;">Monthly Avg</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in inter_category_stats.matrix_rows %}
+                        <tr>
+                            <td>
+                                <span class="cat-pill cat-pill-{{ row.category.lower() }}">{{ row.category }}</span>
+                            </td>
+                            {% for mv in row.monthly_values %}
+                            <td class="matrix-cell {% if mv.amount == row.max_amount and row.max_amount > 0 %}matrix-peak-cell{% endif %}">
+                                ₹{{ "%.0f"|format(mv.amount) }}
+                            </td>
+                            {% endfor %}
+                            <td class="matrix-total-cell">₹{{ "%.2f"|format(row.total) }}</td>
+                            <td class="matrix-avg-cell">₹{{ "%.2f"|format(row.avg) }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- End-of-Month Analytics Insights Summary -->
+        <div class="dashboard-card insights-card">
+            <div class="card-header-flex">
+                <div>
+                    <h2 class="card-title">End-of-Month Analytics Insights & Advisory</h2>
+                    <p class="card-sub">Automated monthly report based on {{ analytics_summary.month_label }} transactions</p>
+                </div>
+                <span class="analytics-badge" style="background: rgba(230, 126, 34, 0.15); color: #e67e22;">💡 Monthly Insights</span>
             </div>
 
+            <div class="insights-content-grid">
+                
+                <div class="insight-stat-box">
+                    <span class="insight-stat-title">Month-over-Month (MoM)</span>
+                    <div class="insight-stat-value-group">
+                        <span class="insight-stat-val">₹{{ "%.2f"|format(analytics_summary.cur_total) }}</span>
+                        {% if analytics_summary.mom_direction == 'up' %}
+                        <span class="mom-badge mom-up">▲ +{{ analytics_summary.mom_pct }}% vs prev month</span>
+                        {% elif analytics_summary.mom_direction == 'down' %}
+                        <span class="mom-badge mom-down">▼ {{ analytics_summary.mom_pct }}% vs prev month</span>
+                        {% else %}
+                        <span class="mom-badge mom-neutral">— First month tracked</span>
+                        {% endif %}
+                    </div>
+                    <span class="insight-stat-sub">Previous Month: ₹{{ "%.2f"|format(analytics_summary.prev_total) }}</span>
+                </div>
+
+                <div class="insight-stat-box">
+                    <span class="insight-stat-title">Daily Average Spend</span>
+                    <span class="insight-stat-val">₹{{ "%.2f"|format(analytics_summary.daily_avg) }} / day</span>
+                    <span class="insight-stat-sub">Calculated over 30 days in {{ analytics_summary.month_label }}</span>
+                </div>
+
+                <div class="insight-stat-box">
+                    <span class="insight-stat-title">Primary Driver</span>
+                    <span class="insight-stat-val">{{ analytics_summary.top_cat }}</span>
+                    <span class="insight-stat-sub">₹{{ "%.2f"|format(analytics_summary.top_cat_amount) }} total expenditure</span>
+                </div>
+
+            </div>
+
+            <!-- Smart Financial Advisory Box -->
+            <div class="advisory-box">
+                <span class="advisory-icon">🤖</span>
+                <div class="advisory-text">
+                    <strong class="advisory-heading">Smart Monthly Advisory Report:</strong>
+                    <p class="advisory-body">{{ analytics_summary.advisory_tip }}</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Expense Records List & Filters -->
+        <div class="dashboard-card records-card">
+            <div class="records-header">
+                <h2 class="card-title">Expense Transactions</h2>
+                
+                <form method="GET" action="{{ url_for('dashboard') }}" class="filter-form">
+                    <input type="hidden" name="start_date" value="{{ selected_start_date }}">
+                    <input type="hidden" name="end_date" value="{{ selected_end_date }}">
+
+                    <div class="filter-group">
+                        
+                        <!-- Month Filter Dropdown -->
+                        <select name="month" class="form-input filter-select" onchange="this.form.submit()">
+                            <option value="All" {% if selected_month == 'All' %}selected{% endif %}>📅 All 7 Months</option>
+                            {% for m in available_months %}
+                            <option value="{{ m.value }}" {% if selected_month == m.value %}selected{% endif %}>{{ m.label }}</option>
+                            {% endfor %}
+                        </select>
+
+                        <!-- Category Filter Dropdown -->
+                        <select name="category" class="form-input filter-select" onchange="this.form.submit()">
+                            <option value="All" {% if selected_category == 'All' %}selected{% endif %}>🏷️ All Categories</option>
+                            <option value="Food" {% if selected_category == 'Food' %}selected{% endif %}>Food</option>
+                            <option value="Bills" {% if selected_category == 'Bills' %}selected{% endif %}>Bills</option>
+                            <option value="Transport" {% if selected_category == 'Transport' %}selected{% endif %}>Transport</option>
+                            <option value="Health" {% if selected_category == 'Health' %}selected{% endif %}>Health</option>
+                            <option value="Shopping" {% if selected_category == 'Shopping' %}selected{% endif %}>Shopping</option>
+                            <option value="Entertainment" {% if selected_category == 'Entertainment' %}selected{% endif %}>Entertainment</option>
+                            <option value="Other" {% if selected_category == 'Other' %}selected{% endif %}>Other</option>
+                        </select>
+
+                        <!-- Search Input -->
+                        <input type="text" name="search" value="{{ selected_search }}" placeholder="Search note..." class="form-input filter-input">
+                        <button type="submit" class="btn-ghost filter-btn">Filter</button>
+                        
+                        {% if selected_month != 'All' or selected_category != 'All' or selected_search or selected_start_date or selected_end_date %}
+                        <a href="{{ url_for('dashboard') }}" class="btn-ghost clear-filter-btn">Reset All</a>
+                        {% endif %}
+                    </div>
+                </form>
+            </div>
+
+            {% if expenses %}
+            <div class="table-responsive">
+                <table class="expenses-table">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Category</th>
+                            <th>Description</th>
+                            <th style="text-align: right;">Amount</th>
+                            <th style="text-align: center;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for expense in expenses %}
+                        <tr>
+                            <td class="expense-date">{{ expense.date }}</td>
+                            <td>
+                                <span class="cat-pill cat-pill-{{ expense.category.lower() }}">{{ expense.category }}</span>
+                            </td>
+                            <td class="expense-desc">{{ expense.description or '—' }}</td>
+                            <td class="expense-amount">₹{{ "%.2f"|format(expense.amount) }}</td>
+                            <td class="expense-actions">
+                                <a href="{{ url_for('edit_expense', id=expense.id) }}" class="action-btn edit-btn" title="Edit">✏️ Edit</a>
+                                <a href="{{ url_for('delete_expense', id=expense.id) }}" class="action-btn delete-btn" title="Delete" onclick="return confirm('Are you sure you want to delete this expense?')">🗑️ Delete</a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="empty-state">
+                <span class="empty-icon">📊</span>
+                <p class="empty-text">No expense records found matching your selected month or criteria.</p>
+                <a href="{{ url_for('add_expense') }}" class="btn-primary">+ Add New Expense</a>
+            </div>
+            {% endif %}
         </div>
 
     </div>
 </section>
 
-<!-- Inject Spider Nodes JSON for JavaScript Radar Renderer -->
+<!-- Data JSON payloads for JavaScript Chart Generators -->
 <script>
-    window.SPIDER_NODES_DATA = {{ analytics_summary.spider_nodes | tojson }};
+    window.SPENDLY_CATEGORY_DATA = {{ category_totals | tojson }};
+    window.SPENDLY_SPIDER_DATA = {{ analytics_summary.spider_nodes | tojson }};
 </script>
 {% endblock %}
