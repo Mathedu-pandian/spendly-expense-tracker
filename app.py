@@ -167,6 +167,7 @@ def dashboard():
 
 
 @app.route("/budgets", methods=["GET", "POST"])
+@app.route("/budget", methods=["GET", "POST"])
 @login_required
 def budgets():
     if request.method == "POST":
