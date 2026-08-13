@@ -15,10 +15,13 @@ from database.db import (
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", "spendly-secret-key-dev-mode-2026")
 
-# Initialize and seed SQLite database on app startup
-with app.app_context():
-    init_db()
-    seed_db()
+# Initialize and seed SQLite database safely on app startup
+try:
+    with app.app_context():
+        init_db()
+        seed_db()
+except Exception as e:
+    app.logger.warning(f"Database startup auto-init note: {e}")
 
 
 @app.before_request
