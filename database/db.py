@@ -1,4 +1,5 @@
 import os
+import shutil
 import sqlite3
 from werkzeug.security import generate_password_hash, check_password_hash
 
@@ -7,7 +8,21 @@ DB_NAME = "spendly.db"
 
 def get_db():
     """Opens connection to SQLite database with Row factory and foreign keys enabled."""
-    db_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), DB_NAME)
+    root_db_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), DB_NAME)
+    
+    # Check if running in a serverless environment (e.g. Vercel / AWS Lambda)
+    if os.environ.get("VERCEL") or os.environ.get("AWS_LAMBDA_FUNCTION_NAME"):
+        tmp_db_path = os.path.join("/tmp", DB_NAME)
+        if not os.path.exists(tmp_db_path):
+            if os.path.exists(root_db_path):
+                try:
+                    shutil.copyfile(root_db_path, tmp_db_path)
+                except Exception:
+                    pass
+        db_path = tmp_db_path
+    else:
+        db_path = root_db_path
+
     conn = sqlite3.connect(db_path)
     conn.row_factory = sqlite3.Row
     conn.execute("PRAGMA foreign_keys = ON")
